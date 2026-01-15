@@ -27,5 +27,4 @@ import { test, expect } from '@playwright/test';
     // Press a key
     // await page.getByPlaceholder('First Name').first().press('A');
     await page.getByPlaceholder('First Name').first().press('Tab');
-    ;
   });
