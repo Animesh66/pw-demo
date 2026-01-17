@@ -13,4 +13,8 @@ import { test, expect } from '@playwright/test';
     const singleClickButton = page.getByText('Single Click Me');
     await expect(singleClickButton).toBeVisible();
     await expect(singleClickButton).toBeEnabled();
+    // Negative Assertions
+    await expect(singleClickButton).not.toBeDisabled();
+    // Soft Assertions
+    await expect.soft(singleClickButton).toBeDisabled();
   });
