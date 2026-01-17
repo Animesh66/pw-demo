@@ -17,4 +17,7 @@ import { test, expect } from '@playwright/test';
     await expect(singleClickButton).not.toBeDisabled();
     // Soft Assertions
     await expect.soft(singleClickButton).toBeDisabled();
+    // Assertion  after soft assertion
+    await expect(page.getByText('Double Click Me')).toBeVisible();
+    await expect(page.getByText('Double Click Me')).toBeDisabled();
   });
