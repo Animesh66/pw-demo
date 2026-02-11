@@ -5,8 +5,9 @@ import { test, expect } from '@playwright/test';
     await page.goto('http://localhost:5173/');
     await expect(page).toHaveTitle(/learnwithanimesh/);
     await expect(page).toHaveURL(/.*\/home/)
-    // Click on the submit button
+    // Click on the submit button and verify the success message
     await page.getByText('Submit Form').click()
+    await expect(page.locator('#success-msg')).toHaveText('Form Submitted successfully');
     // Static Wait
     await page.waitForTimeout(10000);
     await expect(page.locator('#success-msg')).toHaveText('Form Submitted successfully');
