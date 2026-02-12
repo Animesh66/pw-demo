@@ -9,6 +9,7 @@ import { test, expect } from '@playwright/test';
     await page.getByText('Submit Form').click()
     // Verify the success message
     await expect(page.locator('#success-msg')).toHaveText('Form Submitted successfully');
+    //Close the page at the end of the test
     await page.close();
   });
 
