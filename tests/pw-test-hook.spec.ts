@@ -11,27 +11,25 @@ test.describe('This section contains test hooks', () => {
   }); 
   
   test.beforeEach(async ({ page }) => {
+    console.log('This will run before each test');
     await page.goto('http://localhost:5173/');
     await expect(page).toHaveTitle(/learnwithanimesh/);
     await expect(page).toHaveURL(/.*\/home/)
   });
 
   test.afterEach(async ({ page }) => {
+    console.log('This will run after each test');
     await page.close();
   });
 
 test('Test will perform a single click', async ({ page }) => {
     await page.getByText('Single Click Me').click()
-    await page.locator('#click-msg').waitFor();
-    const expectedText = await page.locator('#click-msg').textContent();
-    expect(expectedText).toBe('Single Click Performed!');
+    expect(await page.locator('#click-msg').textContent()).toBe('Single Click Performed!');
   });
 
 test('Test will perform a double click', async ({ page }) => {
     await page.getByText('Double Click Me').dblclick();
-    await page.locator('#dbl-click-msg').waitFor();
-    const expectedText = await page.locator('#dbl-click-msg').textContent();
-    expect(expectedText).toBe('Double Click Performed!');
+    expect(await page.locator('#dbl-click-msg').textContent()).toBe('Double Click Performed!');
   });
 
 });

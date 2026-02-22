@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { testData } from '../data/data';
 
 
-  test('This is a non parameterized test', async ({ page }) => {
+  test('This is registration form test', async ({ page }) => {
     await page.goto('http://localhost:5173/');
     await expect(page).toHaveTitle(/learnwithanimesh/);
     await expect(page).toHaveURL(/.*\/home/);
@@ -18,9 +18,8 @@ import { testData } from '../data/data';
     await page.close();
   });
 
-  // Parameterized test
-  testData.forEach((data, index) => {
-    test(`This is a parameterized test - Dataset ${index + 1}: ${data.firstname} ${data.lastname}`, async ({ page }) => {
+  testData.forEach((data) => {
+    test(`Registration form test for ${data.firstname} ${data.lastname}`, async ({ page }) => {
       await page.goto('http://localhost:5173/');
       await expect(page).toHaveTitle(/learnwithanimesh/);
       await expect(page).toHaveURL(/.*\/home/);
