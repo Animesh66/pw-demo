@@ -22,12 +22,12 @@ test.describe('This section contains test hooks', () => {
     await page.close();
   });
 
-test('Test will perform a single click', async ({ page }) => {
+ test('Test will perform a single click', async ({ page }) => {
     await page.getByText('Single Click Me').click()
     expect(await page.locator('#click-msg').textContent()).toBe('Single Click Performed!');
   });
 
-test('Test will perform a double click', async ({ page }) => {
+ test('Test will perform a double click', async ({ page }) => {
     await page.getByText('Double Click Me').dblclick();
     expect(await page.locator('#dbl-click-msg').textContent()).toBe('Double Click Performed!');
   });
