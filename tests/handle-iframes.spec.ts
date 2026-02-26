@@ -8,7 +8,7 @@ test.describe('Handle iframes', () => {
   });
 
   test('should interact with iframe elements', async ({ page }) => {
-    await page.getByRole('heading', { name: '🖼️ iFrames' }).scrollIntoViewIfNeeded();
+    await page.getByRole('heading', { name: 'iFrames' }).scrollIntoViewIfNeeded();
     
     const frame = page.frameLocator('iframe');
     

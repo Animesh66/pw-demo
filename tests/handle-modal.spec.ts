@@ -8,7 +8,7 @@ test.describe('Handle Modal', () => {
   });
 
   test('should open and close modal', async ({ page }) => {
-    await page.getByRole('heading', { name: '🚨 Alerts & Modals' }).scrollIntoViewIfNeeded();
+    await page.getByRole('heading', { name: 'Alerts & Modals' }).scrollIntoViewIfNeeded();
     
     await page.getByRole('button', { name: 'Open Modal Behavior' }).click();
     
@@ -32,6 +32,6 @@ test.describe('Handle Modal', () => {
     }
     
     await expect(page).toHaveURL('http://localhost:5173/home');
-    await expect(page.getByRole('heading', { name: '🚨 Alerts & Modals' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Alerts & Modals' })).toBeVisible();
   });
 });

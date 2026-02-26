@@ -8,7 +8,7 @@ test.describe('Handle New Tab', () => {
   });
 
   test('should open and interact with new tab', async ({ context, page }) => {
-    await page.getByRole('heading', { name: '📑 Windows & Tabs' }).scrollIntoViewIfNeeded();
+    await page.getByRole('heading', { name: 'Windows & Tabs' }).scrollIntoViewIfNeeded();
     
     const pagePromise = context.waitForEvent('page');
     await page.getByRole('link', { name: 'Open New Tab (Link)' }).click();
@@ -28,6 +28,6 @@ test.describe('Handle New Tab', () => {
     await newPage.close();
     
     await expect(page).toHaveURL('http://localhost:5173/home');
-    await expect(page.getByRole('heading', { name: '📑 Windows & Tabs' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Windows & Tabs' })).toBeVisible();
   });
 });
