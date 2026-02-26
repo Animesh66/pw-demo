@@ -7,27 +7,17 @@ test.describe('Handle New Tab', () => {
     await expect(page).toHaveURL(/.*\/home/);
   });
 
+  test.afterEach(async ({ page }) => {
+    await page.close();
+  });
+
   test('should open and interact with new tab', async ({ context, page }) => {
-    await page.getByRole('heading', { name: 'Windows & Tabs' }).scrollIntoViewIfNeeded();
-    
-    const pagePromise = context.waitForEvent('page');
-    await page.getByRole('link', { name: 'Open New Tab (Link)' }).click();
-    
-    const newPage = await pagePromise;
-    await newPage.waitForLoadState('domcontentloaded');
-    
-    expect(newPage.url()).toContain('sample.html');
-    console.log(`New tab opened with URL: ${newPage.url()}`);
-    
-    await expect(newPage.locator('body')).toBeVisible();
-    
-    const newPageTitle = await newPage.title();
-    expect(newPageTitle).toBeTruthy();
-    console.log(`New page title: ${newPageTitle}`);
-    
+    const [newPage] = await Promise.all([page.waitForEvent('popup'), page.getByRole('link', { name: 'Open New Tab (Link)' }).click()]);
+    await newPage.waitForLoadState('load');
+    await expect(newPage).toHaveURL('http://localhost:5173/sample.html');
+    await expect(newPage).toHaveTitle('Sample New Tab Page');
     await newPage.close();
-    
     await expect(page).toHaveURL('http://localhost:5173/home');
-    await expect(page.getByRole('heading', { name: 'Windows & Tabs' })).toBeVisible();
+    await expect(page).toHaveTitle('learnwithanimesh');
   });
 });

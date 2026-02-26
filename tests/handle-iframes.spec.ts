@@ -14,6 +14,8 @@ test.describe('Handle iframes', () => {
   test('should interact with iframe elements', async ({ page }) => {
     const frame = page.frameLocator('#test-iframe');
     await frame.getByRole('button', { name: 'Click Me (iFrame)' }).click();
-    await expect(frame.getByRole('button', { name: 'Click Me (iFrame)' })).toBeVisible();
+    await expect(frame.getByText('Clicked inside iFrame!')).toBeVisible();
+    await page.getByRole('button', { name: 'Single Click Me' }).click();
+    await expect(page.getByRole('button', { name: 'Single Click Me' })).toBeVisible();
   });
 });
