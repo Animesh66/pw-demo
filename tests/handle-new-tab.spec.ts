@@ -11,7 +11,7 @@ test.describe('Handle New Tab', () => {
     await page.close();
   });
 
-  test('should open and interact with new tab', async ({ context, page }) => {
+  test('should open and interact with new tab', async ({ page }) => {
     // wait for the new page to open after clicking the link
     const [newPage] = await Promise.all([page.waitForEvent('popup'), page.getByRole('link', { name: 'Open New Tab (Link)' }).click()]);
     // wait for the new page to load
