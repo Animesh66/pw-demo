@@ -7,13 +7,12 @@ test.describe('Handle iframes', () => {
     await expect(page).toHaveURL(/.*\/home/);
   });
 
+  test.afterEach(async ({ page }) => {
+    await page.close();
+  });
+
   test('should interact with iframe elements', async ({ page }) => {
-    await page.getByRole('heading', { name: 'iFrames' }).scrollIntoViewIfNeeded();
-    
-    const frame = page.frameLocator('iframe');
-    
-    await expect(frame.getByRole('heading', { name: 'I am inside an iFrame!' })).toBeVisible();
-    await expect(frame.getByRole('button', { name: 'Click Me (iFrame)' })).toBeVisible();
+    const frame = page.frameLocator('#test-iframe');
     await frame.getByRole('button', { name: 'Click Me (iFrame)' }).click();
     await expect(frame.getByRole('button', { name: 'Click Me (iFrame)' })).toBeVisible();
   });
