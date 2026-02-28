@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "smoke-chromium": "npx playwright test --project=smoke-chrome",
+    "smoke-chromium": "npx playwright test --project=smoke-chromium",
     "smoke-chrome-branded": "npx playwright test --project=smoke-chrome-branded",
     "smoke-edge": "npx playwright test --project=smoke-edge",
-    "regression-chromium": "npx playwright test --project=regression-chrome",
+    "regression-chromium": "npx playwright test --project=regression-chromium",
     "regression-edge": "npx playwright test --project=regression-edge",
     "regression-firefox": "npx playwright test --project=regression-firefox",
     "regression-safari": "npx playwright test --project=regression-safari",
