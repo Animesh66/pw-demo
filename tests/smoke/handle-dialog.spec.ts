@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+// test.describe.configure({ mode: 'parallel' });
+
 test.describe('Handle Dialog', () => {
 
   test.beforeEach(async ({ page }) => {
@@ -12,7 +14,6 @@ test.describe('Handle Dialog', () => {
     await page.close();
   });
 
-  // test.describe.configure({ mode: 'parallel' });
   test('should handle alert dialog acceptance', async ({ page }) => {
     // await page.pause();
     page.on('dialog', dialog => dialog.accept());

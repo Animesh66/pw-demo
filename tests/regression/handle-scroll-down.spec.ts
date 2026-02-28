@@ -8,6 +8,10 @@ test.describe('Handle Scroll Down', () => {
     await expect(page).toHaveURL(/.*\/home/);
   });
 
+  test.afterEach(async ({ page }) => {
+    await page.close();
+  });
+
   test('should scroll to footer text', async ({ page }) => {
     await page.getByText('© 2026 learnwithanimesh. All rights reserved.').scrollIntoViewIfNeeded();
     await expect(page.getByText('© 2026 learnwithanimesh. All rights reserved.')).toBeVisible();
