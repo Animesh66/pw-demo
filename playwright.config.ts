@@ -48,9 +48,20 @@ export default defineConfig({
     },
 
     {
+      name: 'smoke-edge',
+      testDir: './tests/smoke',
+      use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    },
+
+    {
       name: 'regression-chrome',
       testDir: './tests/regression',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'regression-edge',
+      testDir: './tests/regression',
+      use: { ...devices['Desktop Edge'], channel: 'msedge' },
     },
     {
       name: 'regression-firefox',
