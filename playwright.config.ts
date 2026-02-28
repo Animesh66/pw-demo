@@ -36,19 +36,33 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
-      name: 'chromium',
+      name: 'smoke-chrome',
+      testDir: './tests/smoke',
       use: { ...devices['Desktop Chrome'] },
     },
 
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
+    {
+      name: 'smoke-chrome-branded',
+      testDir: './tests/smoke',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    },
 
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
+    {
+      name: 'regression-chrome',
+      testDir: './tests/regression',
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'regression-firefox',
+      testDir: './tests/regression',
+      use: { ...devices['Desktop Firefox'] },
+    },
+
+    {
+      name: 'regression-safari',
+      testDir: './tests/regression',
+      use: { ...devices['Desktop Safari'] },
+    },
 
     /* Test against mobile viewports. */
     // {
