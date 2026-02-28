@@ -36,7 +36,7 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
-      name: 'smoke-chrome',
+      name: 'smoke-chromium',
       testDir: './tests/smoke',
       use: { ...devices['Desktop Chrome'], headless: false },
     },
@@ -54,7 +54,7 @@ export default defineConfig({
     },
 
     {
-      name: 'regression-chrome',
+      name: 'regression-chromium',
       testDir: './tests/regression',
       use: { ...devices['Desktop Chrome'], headless: false },
     },
