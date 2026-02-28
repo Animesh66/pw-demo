@@ -11,6 +11,8 @@
     "regression-edge": "npx playwright test --project=regression-edge",
     "regression-firefox": "npx playwright test --project=regression-firefox",
     "regression-safari": "npx playwright test --project=regression-safari",
+    "smoke-mobile-chromium": "npx playwright test --project=smoke-mobile-chromium",
+    "smoke-mobile-safari": "npx playwright test --project=smoke-mobile-safari",
     "test-workers": "npx playwright test --workers=3",
     "smoke-workers": "npx playwright test tests/smoke --workers=3",
     "regression-workers": "npx playwright test tests/regression --workers=3",
