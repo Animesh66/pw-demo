@@ -9,12 +9,12 @@ test.describe('Customer Order Table Tests', () => {
 
   test('should count rows, add a new entry, verify count increased, delete an entry and verify count decreased', async ({ page }) => {
     // Step 1: Count initial rows in the table
-    const allRows = page.getByRole('row');
+    const allRows = page.locator('table tbody tr');
     const initialRowCount = await allRows.count();
     console.log(`Initial row count: ${initialRowCount}`);
     
-    // Verify initial count matches expected (customers.length + 1 for header)
-    expect(initialRowCount).toBe(customers.length + 1);
+    // Verify initial count matches expected (tbody contains only data rows, no header)
+    expect(initialRowCount).toBe(customers.length);
 
     // Step 2: Add a new customer entry
     await page.getByPlaceholder('Enter first name').fill(newCustomer.firstName);
