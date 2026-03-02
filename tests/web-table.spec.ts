@@ -7,6 +7,10 @@ test.describe('Customer Order Table Tests', () => {
     await page.goto('http://localhost:5173/home');
   });
 
+  test.afterEach(async ({ page }) => {
+    await page.close();
+  });
+
   test('should count rows, add a new entry, verify count increased, delete an entry and verify count decreased', async ({ page }) => {
     // Step 1: Count initial rows in the table
     const allRows = page.locator('table tbody tr');
