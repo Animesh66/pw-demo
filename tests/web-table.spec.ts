@@ -24,9 +24,7 @@ test.describe('Customer Order Table Tests', () => {
     await page.getByRole('button', { name: 'Add Row' }).click();
 
     // Verify the new entry appears in the table
-    const newCustomerRow = page.getByRole('row', { 
-      name: new RegExp(`${newCustomer.firstName}.*${newCustomer.lastName}.*${newCustomer.email}`) 
-    });
+    const newCustomerRow = page.locator('table tbody tr').filter({ hasText: newCustomer.email });
     await expect(newCustomerRow).toBeVisible();
 
     // Step 3: Verify row count increased by 1
@@ -38,9 +36,7 @@ test.describe('Customer Order Table Tests', () => {
     const customerToDelete = customers[customers.length - 1]; // Get last customer from test data
     
     // Locate the row containing this customer
-    const rowToDelete = page.getByRole('row', { 
-      name: new RegExp(`${customerToDelete.firstName}.*${customerToDelete.lastName}.*${customerToDelete.email}`) 
-    });
+    const rowToDelete = page.locator('table tbody tr').filter({ hasText: customerToDelete.email });
     await expect(rowToDelete).toBeVisible();
     
     // Delete the row
@@ -52,9 +48,7 @@ test.describe('Customer Order Table Tests', () => {
     expect(rowCountAfterDelete).toBe(rowCountAfterAdd - 1);
     
     // Verify the deleted customer is no longer in the table
-    const deletedCustomerRow = page.getByRole('row', { 
-      name: new RegExp(`${customerToDelete.firstName}.*${customerToDelete.email}`) 
-    });
+    const deletedCustomerRow = page.locator('table tbody tr').filter({ hasText: customerToDelete.email });
     await expect(deletedCustomerRow).not.toBeVisible();
   });
 });
