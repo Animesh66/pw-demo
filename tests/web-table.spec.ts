@@ -20,6 +20,17 @@ test.describe('Customer Order Table Tests', () => {
     // Verify initial count matches expected (tbody contains only data rows, no header)
     expect(initialRowCount).toBe(customers.length);
 
+    // Step 1.5: Verify 3rd row has special class and CSS properties
+    const thirdRow = page.locator('table tbody tr').nth(2); // 0-indexed, so 2 is the 3rd row
+    await expect(thirdRow).toHaveClass(/row-separator/); // Check if row has 'row-separator' class
+    
+    // Verify the CSS background-color property of the 3rd row
+    const backgroundColor = await thirdRow.evaluate((el) => {
+      return window.getComputedStyle(el).backgroundColor;
+    });
+    console.log(`3rd row background color: ${backgroundColor}`);
+    expect(backgroundColor).toBe('rgba(0, 0, 0, 0)'); // Verify transparent background
+
     // Step 2: Add a new customer entry
     await page.getByPlaceholder('Enter first name').fill(newCustomer.firstName);
     await page.getByPlaceholder('Enter last name').fill(newCustomer.lastName);
