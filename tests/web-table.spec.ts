@@ -59,4 +59,43 @@ test.describe('Customer Order Table Tests', () => {
     const deletedCustomerRow = page.locator('table tbody tr').filter({ hasText: customerToDelete.email });
     await expect(deletedCustomerRow).not.toBeVisible();
   });
+
+  test('should find and update email for a customer in the table', async ({ page }) => {
+    const targetEmail = 'eve@example.com';
+    const updatedEmail = 'eve.updated@example.com';
+
+    // Step 1: Locate the row that contains the target email (dynamic, no index)
+    const targetRow = page.locator('table tbody tr').filter({ hasText: targetEmail });
+    await expect(targetRow).toBeVisible();
+
+    // Step 2: Click the Edit button within that row
+    await targetRow.getByRole('button', { name: 'Edit' }).click();
+
+    // Step 3: After clicking Edit, only one row is in edit mode at a time,
+    const emailInput = page.locator('table tbody input[name="email"]');
+    await expect(emailInput).toBeVisible();
+    await expect(emailInput).toHaveValue(targetEmail);
+
+    // Re-locate the editing row — use a row-scoped locator for the filter
+    const editingRow = page.locator('table tbody tr').filter({ has: page.locator('input[name="email"]') });
+
+    // Step 4: Clear the existing email and type the new one
+    await emailInput.clear();
+    await emailInput.fill(updatedEmail);
+
+    // Step 5: Click the Save button within the same editing row
+    await editingRow.getByRole('button', { name: 'Save' }).click();
+
+    // Step 6: Verify the old email is no longer present in any row
+    const oldEmailRow = page.locator('table tbody tr').filter({ hasText: targetEmail });
+    await expect(oldEmailRow).not.toBeVisible();
+
+    // Step 7: Verify the updated email is now visible in the table
+    const updatedRow = page.locator('table tbody tr').filter({ hasText: updatedEmail });
+    await expect(updatedRow).toBeVisible();
+
+    // Step 8: Verify the email cell text matches the updated email exactly
+    const emailCell = updatedRow.locator('td').filter({ hasText: updatedEmail });
+    await expect(emailCell).toHaveText(updatedEmail);
+  });
 });
