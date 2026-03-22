@@ -13,7 +13,7 @@ test.describe('Handle Dialog', { tag: '@dialog-test' }, () => {
   });
 
 
-  test('should handle alert dialog acceptance @smoke', async ({ page }) => {
+  test('should handle alert dialog acceptance', { tag: '@smoke' }, async ({ page }) => {
     page.on('dialog', dialog => dialog.accept());
     await page.getByRole('button', { name: 'Trigger Confirm' }).click();
     await expect(page.getByRole('heading', { name: 'Alerts & Modals' })).toBeVisible();
