@@ -8,12 +8,7 @@ test.describe('Handle Scroll Down', () => {
     await expect(page).toHaveURL(/.*\/home/);
   });
 
-  test('should scroll to footer text', {
-  annotation: {
-    type: 'issue',
-    description: 'https://github.com/issue-url',
-  },
-},async ({ page }) => {
+  test('should scroll to footer text', { tag: ['@regression', '@smoke'] }, async ({ page }) => {
     await page.getByText('© 2026 learnwithanimesh. All rights reserved.').scrollIntoViewIfNeeded();
     await expect(page.getByText('© 2026 learnwithanimesh. All rights reserved.')).toBeVisible();
     await page.screenshot({ path: 'screenshot/scroll-down.png' });
