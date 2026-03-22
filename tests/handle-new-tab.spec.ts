@@ -12,7 +12,7 @@ test.describe('Handle New Tab @new-tab-test', () => {
     await page.close();
   });
 
-  test.fixme('should open and interact with new tab', { tag: '@regression' },async ({ page }) => {
+  test.fixme('should open and interact with new tab', { tag: '@regression' }, async ({ page }) => {
     // TODO: This test is expected to fail due to a known issue with handling new tabs in Playwright. Once the issue is resolved, remove the fixme annotation and verify the test passes successfully.
     // wait for the new page to open after clicking the link
     const [newPage] = await Promise.all([page.waitForEvent('popup'), page.getByRole('link', { name: 'Open New Tab (Link)' }).click()]);
