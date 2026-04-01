@@ -6,8 +6,8 @@ test.describe('Order Placement Tests', () => {
     // Navigate to the application
     await page.goto('/');
     
-    // Navigate to login page
-    await page.getByRole('link', { name: 'Login' }).click();
+    // Navigate to login page using the link in the header banner
+    await page.getByRole('banner').getByRole('link', { name: 'Login' }).click();
     
     // Fill in login credentials using getByRole locators
     await page.getByRole('textbox', { name: 'you@example.com' }).fill('testuser@example.com');
@@ -17,7 +17,7 @@ test.describe('Order Placement Tests', () => {
     await page.getByRole('button', { name: 'Sign In' }).click();
     
     // Verify successful login by checking user name is displayed in header
-    await expect(page.getByRole('banner').locator('text=/testuser|test user/i')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('banner').getByText(/testuser|test user/i)).toBeVisible({ timeout: 10000 });
   });
 
   test('should place order successfully with valid card number', async ({ page }) => {
@@ -28,27 +28,27 @@ test.describe('Order Placement Tests', () => {
     await page.getByRole('button', { name: /Add to Cart/i }).first().click();
     
     // Navigate to cart
-    await page.click('a:has-text("Cart"), button:has-text("Cart"), [aria-label="Cart"]');
+    await page.getByRole('link', { name: /cart/i }).click();
     
     // Proceed to checkout
-    await page.click('button:has-text("Checkout"), button:has-text("Proceed to checkout")');
+    await page.getByRole('button', { name: /checkout|proceed to checkout/i }).click();
     
     // Fill in shipping information if required
-    await page.fill('input[name="address"], input[placeholder*="address" i]', '123 Test Street').catch(() => {});
-    await page.fill('input[name="city"]', 'Test City').catch(() => {});
-    await page.fill('input[name="zipcode"], input[name="zip"]', '12345').catch(() => {});
+    await page.getByPlaceholder(/address/i).fill('123 Test Street').catch(() => {});
+    await page.getByPlaceholder(/city/i).fill('Test City').catch(() => {});
+    await page.getByPlaceholder(/zip|postal/i).fill('12345').catch(() => {});
     
     // Fill in valid card details
-    await page.fill('input[name="cardNumber"], input[placeholder*="card number" i], #cardNumber', '4111111111111111');
-    await page.fill('input[name="cardName"], input[placeholder*="name on card" i]', 'Test User').catch(() => {});
-    await page.fill('input[name="expiry"], input[placeholder*="expiry" i], input[name="expiryDate"]', '12/28').catch(() => {});
-    await page.fill('input[name="cvv"], input[placeholder*="cvv" i], input[name="cvc"]', '123').catch(() => {});
+    await page.getByPlaceholder(/card number/i).fill('4111111111111111');
+    await page.getByPlaceholder(/name on card/i).fill('Test User').catch(() => {});
+    await page.getByPlaceholder(/expiry|expiration/i).fill('12/28').catch(() => {});
+    await page.getByPlaceholder(/cvv|cvc|security code/i).fill('123').catch(() => {});
     
     // Submit order
-    await page.click('button:has-text("Place Order"), button:has-text("Complete Order"), button[type="submit"]');
+    await page.getByRole('button', { name: /place order|complete order|submit/i }).click();
     
     // Verify order success
-    await expect(page.locator('text=/order.*success|thank you|confirmed/i')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/order.*success|thank you|confirmed/i)).toBeVisible({ timeout: 10000 });
   });
 
   test('should fail to place order with invalid card number', async ({ page }) => {
@@ -59,26 +59,26 @@ test.describe('Order Placement Tests', () => {
     await page.getByRole('button', { name: /Add to Cart/i }).first().click();
     
     // Navigate to cart
-    await page.click('a:has-text("Cart"), button:has-text("Cart"), [aria-label="Cart"]');
+    await page.getByRole('link', { name: /cart/i }).click();
     
     // Proceed to checkout
-    await page.click('button:has-text("Checkout"), button:has-text("Proceed to checkout")');
+    await page.getByRole('button', { name: /checkout|proceed to checkout/i }).click();
     
     // Fill in shipping information if required
-    await page.fill('input[name="address"], input[placeholder*="address" i]', '123 Test Street').catch(() => {});
-    await page.fill('input[name="city"]', 'Test City').catch(() => {});
-    await page.fill('input[name="zipcode"], input[name="zip"]', '12345').catch(() => {});
+    await page.getByPlaceholder(/address/i).fill('123 Test Street').catch(() => {});
+    await page.getByPlaceholder(/city/i).fill('Test City').catch(() => {});
+    await page.getByPlaceholder(/zip|postal/i).fill('12345').catch(() => {});
     
     // Fill in invalid card details
-    await page.fill('input[name="cardNumber"], input[placeholder*="card number" i], #cardNumber', '1234567890123456');
-    await page.fill('input[name="cardName"], input[placeholder*="name on card" i]', 'Test User').catch(() => {});
-    await page.fill('input[name="expiry"], input[placeholder*="expiry" i], input[name="expiryDate"]', '12/28').catch(() => {});
-    await page.fill('input[name="cvv"], input[placeholder*="cvv" i], input[name="cvc"]', '123').catch(() => {});
+    await page.getByPlaceholder(/card number/i).fill('1234567890123456');
+    await page.getByPlaceholder(/name on card/i).fill('Test User').catch(() => {});
+    await page.getByPlaceholder(/expiry|expiration/i).fill('12/28').catch(() => {});
+    await page.getByPlaceholder(/cvv|cvc|security code/i).fill('123').catch(() => {});
     
     // Submit order
-    await page.click('button:has-text("Place Order"), button:has-text("Complete Order"), button[type="submit"]');
+    await page.getByRole('button', { name: /place order|complete order|submit/i }).click();
     
     // Verify order failure - look for error message
-    await expect(page.locator('text=/invalid.*card|card.*invalid|payment.*failed|error/i')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/invalid.*card|card.*invalid|payment.*failed|error/i)).toBeVisible({ timeout: 10000 });
   });
 });
