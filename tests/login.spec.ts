@@ -33,7 +33,7 @@ test.describe('Order Placement Tests', () => {
     await page.getByRole('button', { name: /Add to Cart/i }).first().click();
     
     // Navigate to cart
-    await page.getByRole('link', { name: /cart/i }).click();
+    await page.getByRole('banner').getByRole('link', { name: /cart/i }).click();
     
     // Proceed to checkout
     await page.getByRole('button', { name: /checkout|proceed to checkout/i }).click();
@@ -64,7 +64,7 @@ test.describe('Order Placement Tests', () => {
     await page.getByRole('button', { name: /Add to Cart/i }).first().click();
     
     // Navigate to cart
-    await page.getByRole('link', { name: /cart/i }).click();
+    await page.getByRole('banner').getByRole('link', { name: /cart/i }).click();
     
     // Proceed to checkout
     await page.getByRole('button', { name: /checkout|proceed to checkout/i }).click();
