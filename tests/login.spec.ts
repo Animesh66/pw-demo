@@ -24,6 +24,10 @@ test.describe('Order Placement Tests', () => {
     await expect(page.getByRole('banner').getByText(/Hi,.*test user/i)).toBeVisible({ timeout: 10000 });
   });
 
+  test.afterEach(async ({ page }) => {
+   await page.close();
+  });
+
   test('should place order successfully with valid card number', async ({ page }) => {
     // Navigate to products/shop page
     await page.getByRole('banner').getByRole('link', { name: 'Shop Now' }).click();
@@ -51,7 +55,7 @@ test.describe('Order Placement Tests', () => {
     await page.getByPlaceholder('MM/YY').fill('12/28');
     await page.getByPlaceholder('123').last().fill('456');
     
-    // Submit order - button text is "💳 Pay $299"
+    // Submit order 
     await page.getByRole('button', { name: /pay/i }).click();
     
     // Verify order success
@@ -85,7 +89,7 @@ test.describe('Order Placement Tests', () => {
     await page.getByPlaceholder('MM/YY').fill('12/28');
     await page.getByPlaceholder('123').last().fill('456');
     
-    // Submit order - button text is "💳 Pay $299"
+    // Submit order 
     await page.getByRole('button', { name: /pay/i }).click();
     
     // Verify order failure - look for error message
