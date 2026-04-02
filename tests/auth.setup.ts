@@ -3,7 +3,7 @@ import path from 'path';
 
 const authFile = path.join(__dirname, '../playwright/.auth/user.json');
 
-setup('authenticate', async ({ page }) => {
+setup('Login to demo app', async ({ page }) => {
     // Navigate to the application
     await page.goto('/');
     
