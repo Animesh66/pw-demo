@@ -45,21 +45,19 @@ test.describe('Order Placement Tests', () => {
     // Proceed to checkout
     await page.getByRole('button', { name: /checkout|proceed to checkout/i }).click();
     
-    // Wait for checkout page to load
-    await page.waitForLoadState('networkidle');
-    
     // Fill in shipping information if required
-    await page.getByPlaceholder(/address/i).fill('123 Test Street').catch(() => {});
-    await page.getByPlaceholder(/city/i).fill('Test City').catch(() => {});
-    await page.getByPlaceholder(/zip|postal/i).fill('12345').catch(() => {});
+    await page.getByPlaceholder(/address/i).fill('123 Test Street');
+    await page.getByPlaceholder(/city/i).fill('Test City');
+    await page.getByPlaceholder(/zip|postal/i).fill('12345');
     
     // Fill in valid card details
-    await page.getByPlaceholder(/card number/i).fill('4111111111111111').catch(() => {});
-    await page.getByPlaceholder(/name on card/i).fill('Test User').catch(() => {});    await page.getByPlaceholder(/expiry|expiration/i).fill('12/28').catch(() => {});
-    await page.getByPlaceholder(/cvv|cvc|security code/i).fill('123').catch(() => {});
+    await page.getByPlaceholder(/card number/i).fill('4111111111111111');
+    await page.getByPlaceholder(/name on card/i).fill('Test User');
+    await page.getByPlaceholder(/expiry|expiration/i).fill('12/28');
+    await page.getByPlaceholder(/cvv|cvc|security code/i).fill('123');
     
     // Submit order
-    await page.getByRole('button', { name: /place order|complete order|submit/i }).click().catch(() => {});
+    await page.getByRole('button', { name: /place order|complete order|submit/i }).click();
     
     // Verify order success
     await expect(page.getByText(/order.*success|thank you|confirmed/i)).toBeVisible({ timeout: 10000 });
@@ -87,18 +85,18 @@ test.describe('Order Placement Tests', () => {
     await page.waitForLoadState('networkidle');
     
     // Fill in shipping information if required
-    await page.getByPlaceholder(/address/i).fill('123 Test Street').catch(() => {});
-    await page.getByPlaceholder(/city/i).fill('Test City').catch(() => {});
-    await page.getByPlaceholder(/zip|postal/i).fill('12345').catch(() => {});
+    await page.getByPlaceholder(/address/i).fill('123 Test Street');
+    await page.getByPlaceholder(/city/i).fill('Test City');
+    await page.getByPlaceholder(/zip|postal/i).fill('12345');
     
     // Fill in invalid card details
-    await page.getByPlaceholder(/card number/i).fill('1234567890123456').catch(() => {});
-    await page.getByPlaceholder(/name on card/i).fill('Test User').catch(() => {});
-    await page.getByPlaceholder(/expiry|expiration/i).fill('12/28').catch(() => {});
-    await page.getByPlaceholder(/cvv|cvc|security code/i).fill('123').catch(() => {});
+    await page.getByPlaceholder(/card number/i).fill('1234567890123456');
+    await page.getByPlaceholder(/name on card/i).fill('Test User');
+    await page.getByPlaceholder(/expiry|expiration/i).fill('12/28');
+    await page.getByPlaceholder(/cvv|cvc|security code/i).fill('123');
     
     // Submit order
-    await page.getByRole('button', { name: /place order|complete order|submit/i }).click().catch(() => {});
+    await page.getByRole('button', { name: /place order|complete order|submit/i }).click();
     
     // Verify order failure - look for error message
     await expect(page.getByText(/invalid.*card|card.*invalid|payment.*failed|error/i)).toBeVisible({ timeout: 10000 });
