@@ -43,6 +43,7 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      testIgnore: /.*-storage-state\.spec\.ts/,
     },
 
     {
