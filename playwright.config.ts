@@ -45,7 +45,6 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'],
         headless: false,
        },
-      testIgnore: /.*-storage-state\.spec\.ts/,
     },
 
     {
@@ -55,7 +54,6 @@ export default defineConfig({
       storageState: 'playwright/.auth/user.json' 
     },
       dependencies: ['setup'],
-      testMatch: /.*-storage-state\.spec\.ts/
     },
 
     // {
