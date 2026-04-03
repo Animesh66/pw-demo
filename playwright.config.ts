@@ -42,13 +42,16 @@ export default defineConfig({
 
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'],
+        headless: false,
+       },
       testIgnore: /.*-storage-state\.spec\.ts/,
     },
 
     {
       name: 'storage-state-tests',
       use: { ...devices['Desktop Chrome'],
+        headless: false,
       storageState: 'playwright/.auth/user.json' 
     },
       dependencies: ['setup'],
