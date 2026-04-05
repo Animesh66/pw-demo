@@ -52,7 +52,7 @@ export const test = base.extend<MyFixtures>({
     await use(page);
 
     // Cleanup: Logout after test
-    await page.getByRole('banner').getByRole('link', { name: /logout|sign out/i }).click();
+    await page.getByRole('banner').getByRole('button', { name: /logout|sign out/i }).click();
     await page.close();
   },
 
