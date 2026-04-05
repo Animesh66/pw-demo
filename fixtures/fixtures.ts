@@ -11,7 +11,11 @@ type MyFixtures = {
   credentials: LoginCredentials;
 };
 
-export const test = base.extend<MyFixtures>({
+type WorkerFixtures = {
+  workerLog: string;
+};
+
+export const test = base.extend<MyFixtures, WorkerFixtures>({
   // Credentials fixture: reads from environment variables by default, can be overridden
   credentials: [
     { 
@@ -64,6 +68,25 @@ export const test = base.extend<MyFixtures>({
     // Provide the page at checkout/payment stage to the test
     await use(page);
   },
+
+  // Worker-scoped fixture: logs worker information once per worker
+  workerLog: [async ({ }, use, workerInfo) => {
+    const email = process.env.TEST_USER_EMAIL;
+    const password = process.env.TEST_USER_PASSWORD;
+    
+    console.log(`[Worker ${workerInfo.workerIndex}] Initialized`);
+    
+    if (!email || !password) {
+      console.error(`[Worker ${workerInfo.workerIndex}] ERROR: Username or password is missing`);
+    } else {
+      console.log(`[Worker ${workerInfo.workerIndex}] Username: ${email}`);
+      console.log(`[Worker ${workerInfo.workerIndex}] Password: ${password}`);
+    }
+    
+    await use(`Worker-${workerInfo.workerIndex}`);
+    
+    console.log(`[Worker ${workerInfo.workerIndex}] Cleanup completed`);
+  }, { scope: 'worker' }],
 });
 
 export { expect } from '@playwright/test';
