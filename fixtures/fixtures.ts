@@ -7,21 +7,27 @@ type LoginCredentials = {
 
 type MyFixtures = {
   login: Page;
-  placeOrder: Page;
+  checkout: Page;
   credentials: LoginCredentials;
 };
 
 export const test = base.extend<MyFixtures>({
-  // Credentials fixture: must be overridden in tests
-  credentials: [undefined as any, { option: true }],
+  // Credentials fixture: reads from environment variables by default, can be overridden
+  credentials: [
+    { 
+      email: process.env.TEST_USER_EMAIL || '', 
+      password: process.env.TEST_USER_PASSWORD || '' 
+    }, 
+    { option: true }
+  ],
 
   // Login fixture: handles login and logout
   login: async ({ page, credentials }, use) => {
-    if (!credentials) {
-      throw new Error('Login credentials not provided. Please use test.use({ credentials: { email: "...", password: "..." } }) in your test or describe block.');
-    }
-    
     const { email, password } = credentials;
+    
+    if (!email || !password) {
+      throw new Error('Login credentials not provided. Set TEST_USER_EMAIL and TEST_USER_PASSWORD environment variables or use test.use({ credentials: { email: "...", password: "..." } }).');
+    }
 
     // Navigate to the application
     await page.goto('/');
@@ -46,19 +52,12 @@ export const test = base.extend<MyFixtures>({
     await use(page);
 
     // Cleanup: Logout after test
-    try {
-      // Attempt to click logout button (adjust selector based on your app)
-      await page.getByRole('banner').getByRole('link', { name: /logout|sign out/i }).click({ timeout: 5000 });
-    } catch (error) {
-      // If logout fails or button not found, continue with page close
-      console.log('Logout button not found or failed to click');
-    }
-    
+    await page.getByRole('banner').getByRole('link', { name: /logout|sign out/i }).click();
     await page.close();
   },
 
-  // PlaceOrder fixture: navigates to checkout/payment page with item in cart
-  placeOrder: async ({ login }, use) => {
+  // Checkout fixture: navigates to checkout/payment page with item in cart
+  checkout: async ({ login }, use) => {
     const page = login; // This fixture depends on login fixture
 
     // Navigate to products/shop page
@@ -80,8 +79,6 @@ export const test = base.extend<MyFixtures>({
 
     // Provide the page at checkout/payment stage to the test
     await use(page);
-    
-    // No additional cleanup needed as login fixture handles page close
   },
 });
 
