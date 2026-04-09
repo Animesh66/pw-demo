@@ -9,6 +9,11 @@ test.describe('Visual Regression Tests', () => {
     await page.waitForLoadState('domcontentloaded');
   });
 
+  test.afterEach(async ({ page }) => {
+    // Reset theme to default (dark mode) after each test
+    await page.close();
+  });
+
   test('should compare homepage screenshots before and after theme change using toHaveScreenshot', async ({ page }) => {
     // Take screenshot before theme change
     await expect(page).toHaveScreenshot('homepage-before-theme-change.png');
