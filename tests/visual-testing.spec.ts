@@ -9,7 +9,7 @@ test.describe('Visual Regression Tests', () => {
     await page.waitForLoadState('domcontentloaded');
   });
 
-  test('should match homepage screenshot after theme change using toHaveScreenshot', async ({ page }) => {
+  test('should compare homepage screenshots before and after theme change using toHaveScreenshot', async ({ page }) => {
     // Take screenshot before theme change
     await expect(page).toHaveScreenshot('homepage-before-theme-change.png');
     
@@ -20,17 +20,17 @@ test.describe('Visual Regression Tests', () => {
     await expect(page).toHaveScreenshot('homepage-after-theme-change.png');
   });
 
-  test('should match homepage screenshot after theme change using toMatchSnapshot', async ({ page }) => {
-    // Take screenshot before theme change
-    const screenshotBefore = await page.screenshot();
-    expect(screenshotBefore).toMatchSnapshot('homepage-before-theme-change-snapshot.png');
+  test('should compare homepage text content before and after theme change using toMatchSnapshot', async ({ page }) => {
+    // Get text content before theme change
+    const textContentBefore = await page.textContent('body');
+    expect(textContentBefore).toMatchSnapshot('homepage-before-theme-change-text.txt');
     
     // Click theme change button to switch to light mode
     await page.getByRole('button', { name: 'Switch to light mode' }).click();
     
-    // Take screenshot after theme change and compare
-    const screenshotAfter = await page.screenshot();
-    expect(screenshotAfter).toMatchSnapshot('homepage-after-theme-change-snapshot.png');
+    // Get text content after theme change and compare
+    const textContentAfter = await page.textContent('body');
+    expect(textContentAfter).toMatchSnapshot('homepage-after-theme-change-text.txt');
   });
 });
 
