@@ -18,8 +18,8 @@ test.describe('Visual Regression Tests', () => {
     // Take screenshot before theme change
     await expect(page).toHaveScreenshot('homepage-before-theme-change.png');
     
-    // Click theme change button to switch to light mode
-    await page.getByRole('button', { name: 'Switch to light mode' }).click();
+    // Click theme change button to switch to dark mode
+    await page.getByRole('button', { name: 'Switch to dark mode' }).click();
     
     // Take screenshot after theme change and compare
     await expect(page).toHaveScreenshot('homepage-after-theme-change.png');
@@ -30,8 +30,8 @@ test.describe('Visual Regression Tests', () => {
     const textContentBefore = await page.textContent('body');
     expect(textContentBefore).toMatchSnapshot('homepage-before-theme-change-text.txt');
     
-    // Click theme change button to switch to light mode
-    await page.getByRole('button', { name: 'Switch to light mode' }).click();
+    // Click theme change button to switch to dark mode
+    await page.getByRole('button', { name: 'Switch to dark mode' }).click();
     
     // Get text content after theme change and compare
     const textContentAfter = await page.textContent('body');
