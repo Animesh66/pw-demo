@@ -17,7 +17,6 @@ test.describe('Visual Regression Tests', () => {
   test('should compare homepage screenshots before and after theme change using toHaveScreenshot',{ tag: '@visual-screenshot' }, async ({ page }) => {
     // Take screenshot before theme change, masking the clock to avoid time-based failures
     await expect(page).toHaveScreenshot('homepage-before-theme-change.png', {
-      animations: 'disabled',
       mask: [page.getByText(/\d{1,2}:\d{2}:\d{2}\s*(AM|PM)/i)],
     });
     
@@ -26,7 +25,6 @@ test.describe('Visual Regression Tests', () => {
     
     // Take screenshot after theme change and compare, masking the clock
     await expect(page).toHaveScreenshot('homepage-after-theme-change.png', {
-      animations: 'disabled',
       mask: [page.getByText(/\d{1,2}:\d{2}:\d{2}\s*(AM|PM)/i)],
     });
   });
