@@ -16,17 +16,13 @@ test.describe('Visual Regression Tests', () => {
 
   test('should compare homepage screenshots before and after theme change using toHaveScreenshot', async ({ page }) => {
     // Take screenshot before theme change
-    await expect(page).toHaveScreenshot('homepage-before-theme-change.png', {
-      animations: 'disabled',
-    });
+    await expect(page).toHaveScreenshot('homepage-before-theme-change.png');
     
     // Click theme change button to switch to dark mode (first button in navigation)
     await page.locator('nav button').first().click();
     
     // Take screenshot after theme change and compare
-    await expect(page).toHaveScreenshot('homepage-after-theme-change.png', {
-      animations: 'disabled',
-    });
+    await expect(page).toHaveScreenshot('homepage-after-theme-change.png');
   });
 
   test('should compare homepage text content before and after theme change using toMatchSnapshot', async ({ page }) => {
