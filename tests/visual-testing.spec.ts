@@ -37,5 +37,13 @@ test.describe('Visual Regression Tests', () => {
     const textContentAfter = await page.textContent('body');
     expect(textContentAfter).toMatchSnapshot('homepage-after-theme-change-text.txt');
   });
+
+  test('should compare homepage screenshot using toMatchSnapshot', async ({ page }) => {
+    // Take screenshot of the homepage
+    const screenshot = await page.screenshot({ fullPage: true, animations: 'disabled' });
+    
+    // Compare screenshot using toMatchSnapshot
+    expect(screenshot).toMatchSnapshot('homepage-screenshot.png');
+  });
 });
 
