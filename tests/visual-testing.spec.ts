@@ -50,11 +50,16 @@ test.describe('Visual Regression Tests', () => {
   });
 
   test('should compare homepage screenshot using toMatchSnapshot',{ tag: '@visual-snapshot-compare' }, async ({ page }) => {
-    // Take screenshot of the homepage
-    const screenshot = await page.screenshot({ fullPage: true, animations: 'disabled' });
+    // Take full screenshot before theme change
+    const screenshotBefore = await page.screenshot({ fullPage: true, animations: 'disabled' });
+    expect(screenshotBefore).toMatchSnapshot('homepage-fullpage-before-theme-change.png');
     
-    // Compare screenshot using toMatchSnapshot
-    expect(screenshot).toMatchSnapshot('homepage-screenshot.png');
+    // Click theme change button to switch to dark mode (first button in navigation)
+    await page.locator('nav button').first().click();
+    
+    // Take full screenshot after theme change and compare
+    const screenshotAfter = await page.screenshot({ fullPage: true, animations: 'disabled' });
+    expect(screenshotAfter).toMatchSnapshot('homepage-fullpage-after-theme-change.png');
   });
 });
 
