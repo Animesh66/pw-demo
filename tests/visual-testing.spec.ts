@@ -10,7 +10,7 @@ test.describe('Visual Regression Tests', () => {
   });
 
   test.afterEach(async ({ page }) => {
-    // Reset theme to default (dark mode) after each test
+    // Close the page after each test to free up resources
     await page.close();
   });
 
