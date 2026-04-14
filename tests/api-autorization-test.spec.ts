@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('API Authorization scenarios', () => {
+  let authToken: string;
 
-  test('should retrieve orders with valid authorization token', async ({ request }) => {
-    // First, login to get the authorization token
+  test.beforeAll(async ({ request }) => {
+    // Login to get the authorization token
     const loginPayload = {
       email: 'test.user@email.com',
       password: 'test1234'
@@ -18,11 +19,13 @@ test.describe('API Authorization scenarios', () => {
 
     expect(loginResponse.ok()).toBeTruthy();
     const loginData = await loginResponse.json();
-    console.log('Login Response for Orders:', loginData);
     
-    const authToken = loginData.token;
+    authToken = loginData.token;
     expect(authToken).toBeDefined();
+    console.log('Login Response:', loginData);
+  });
 
+  test('should retrieve orders with valid authorization token', async ({ request }) => {
     // Use the token to retrieve orders
     const userId = '69c27617cc4f875e98000730';
     const ordersResponse = await request.get(`http://localhost:3000/api/orders?userId=${userId}`, {

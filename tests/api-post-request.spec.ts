@@ -24,13 +24,13 @@ test.describe('API POST Request scenarios', () => {
     // Verify response contains authentication token
     expect(responseBody).toHaveProperty('token');
     expect(responseBody.token.length).toBeGreaterThan(0);
-    expect(responseBody).toHaveProperty('email');
-    expect(responseBody.email).toBe(loginPayload.email);
+    expect(responseBody.user).toHaveProperty('email');
+    expect(responseBody.user.email).toBe(loginPayload.email);
   });
   
   test('should register a new user', async ({ request }) => {
     const registerPayload = {
-      email: 'testuser@email.com',
+      email: 'testuser23213@email.com',
       password: 'test1234',
       name: 'Test User',
       gender: 'Male',

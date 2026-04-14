@@ -25,9 +25,9 @@ test.describe('API GET Request scenarios', () => {
     const responseBody = await response.json();
     console.log('Product Response:', responseBody);
     
-    // Verify the product name is Premium Wireless Headphones
+    // Verify the product name is Smart Watch Series 7
     expect(responseBody).toHaveProperty('name');
-    expect(responseBody.name).toBe('Premium Wireless Headphones');
+    expect(responseBody.name).toBe('Smart Watch Series 7');
   });
 
 });
