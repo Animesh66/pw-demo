@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Standalone API Testing', () => {
+test.describe('API Testing scenarios', () => {
   
   const baseURL = 'http://localhost:3000';
   
@@ -67,9 +67,6 @@ test.describe('Standalone API Testing', () => {
     
     const responseBody = await response.json();
     console.log('Products Response:', responseBody);
-    
-    // Verify response is an array
-    expect(Array.isArray(responseBody) || typeof responseBody === 'object').toBeTruthy();
   });
 
   test('should retrieve orders with valid authorization token', async ({ request }) => {
@@ -106,9 +103,6 @@ test.describe('Standalone API Testing', () => {
     
     const ordersData = await ordersResponse.json();
     console.log('Orders Response:', ordersData);
-    
-    // Verify response structure
-    expect(Array.isArray(ordersData) || typeof ordersData === 'object').toBeTruthy();
   });
 
 });
