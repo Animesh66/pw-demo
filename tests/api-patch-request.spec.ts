@@ -43,9 +43,12 @@ test.describe('API PATCH Request scenarios', () => {
         'Authorization': `Bearer ${authToken}`
       }
     });
+    
+    expect(orderResponse.ok()).toBeTruthy();
     const orderData = await orderResponse.json();
     console.log('Order Creation Response:', orderData);
-    expect(orderResponse.ok()).toBeTruthy();
+    orderId = orderData.order._id;
+    console.log('Created Order ID:', orderId);
   });
 
   test('should cancel an order', async ({ request }) => {
