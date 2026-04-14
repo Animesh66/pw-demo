@@ -43,12 +43,9 @@ test.describe('API PATCH Request scenarios', () => {
         'Authorization': `Bearer ${authToken}`
       }
     });
-
-    expect(orderResponse.ok()).toBeTruthy();
     const orderData = await orderResponse.json();
     console.log('Order Creation Response:', orderData);
-    orderId = orderData.orderId || orderData._id || orderData.id || orderData.order?._id || orderData.order?.id;
-    console.log('Created Order ID:', orderId);
+    expect(orderResponse.ok()).toBeTruthy();
   });
 
   test('should cancel an order', async ({ request }) => {
@@ -57,13 +54,10 @@ test.describe('API PATCH Request scenarios', () => {
         'Authorization': `Bearer ${authToken}`
       }
     });
-
-    expect(response.ok()).toBeTruthy();
-    expect(response.status()).toBe(200);
-    
     const responseBody = await response.json();
     console.log('Cancel Order Response:', responseBody);
-    
+    expect(response.ok()).toBeTruthy();
+    expect(response.status()).toBe(200);
     // Verify response structure
     expect(responseBody).toHaveProperty('message');
     expect(responseBody.message).toBe('Order cancelled successfully');

@@ -14,13 +14,10 @@ test.describe('API POST Request scenarios', () => {
         'Content-Type': 'application/json'
       }
     });
-
-    expect(response.ok()).toBeTruthy();
-    expect(response.status()).toBe(200);
-    
     const responseBody = await response.json();
     console.log('Login Response:', responseBody);
-    
+    expect(response.ok()).toBeTruthy();
+    expect(response.status()).toBe(200);
     // Verify response contains authentication token
     expect(responseBody).toHaveProperty('token');
     expect(responseBody.token.length).toBeGreaterThan(0);
@@ -43,11 +40,10 @@ test.describe('API POST Request scenarios', () => {
         'Content-Type': 'application/json'
       }
     });
-
-    expect(response.ok()).toBeTruthy();
-    expect(response.status()).toBe(201);
     const responseBody = await response.json();
     console.log('Register Response:', responseBody);
+    expect(response.ok()).toBeTruthy();
+    expect(response.status()).toBe(201);
     // Verify response contains expected fields
     expect(responseBody).toHaveProperty('message');
     expect(responseBody.message).toBe('User registered successfully');

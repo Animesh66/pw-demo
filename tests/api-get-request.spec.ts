@@ -19,12 +19,10 @@ test.describe('API GET Request scenarios', () => {
     const productId = '69c25db1a6946c94730b9026';
     const response = await request.get(`http://localhost:3000/api/products/${productId}`);
 
-    expect(response.ok()).toBeTruthy();
-    expect(response.status()).toBe(200);
-    
     const responseBody = await response.json();
     console.log('Product Response:', responseBody);
-    
+    expect(response.ok()).toBeTruthy();
+    expect(response.status()).toBe(200);    
     // Verify the product name is Smart Watch Series 7
     expect(responseBody).toHaveProperty('name');
     expect(responseBody.name).toBe('Smart Watch Series 7');

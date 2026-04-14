@@ -5,13 +5,10 @@ test.describe('API DELETE Request scenarios', () => {
   test('should delete a product by id', async ({ request }) => {
     const productId = '69c25db1a6946c94730b9029';
     const response = await request.delete(`http://localhost:3000/api/products/${productId}`);
-
-    expect(response.ok()).toBeTruthy();
-    expect(response.status()).toBe(200);
-    
     const responseBody = await response.json();
     console.log('Delete Product Response:', responseBody);
-    
+    expect(response.ok()).toBeTruthy();
+    expect(response.status()).toBe(200);
     // Verify response structure
     expect(responseBody).toHaveProperty('success');
     expect(responseBody.success).toBe(true);

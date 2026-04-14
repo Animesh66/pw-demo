@@ -33,10 +33,11 @@ test.describe('API Authorization scenarios', () => {
         'Authorization': `Bearer ${authToken}`
       }
     });
-    expect(ordersResponse.ok()).toBeTruthy();
-    expect(ordersResponse.status()).toBe(200);
     const ordersData = await ordersResponse.json();
     console.log('Orders Response:', ordersData);
+    expect(ordersResponse.ok()).toBeTruthy();
+    expect(ordersResponse.status()).toBe(200);
+
   });
 
 });
