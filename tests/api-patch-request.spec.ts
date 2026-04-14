@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('API PATCH Request scenarios', () => {
   let orderId: string;
+  let authToken: string;
 
   test.beforeEach(async ({ request }) => {
     // First, login to get the authorization token
@@ -19,13 +20,13 @@ test.describe('API PATCH Request scenarios', () => {
 
     expect(loginResponse.ok()).toBeTruthy();
     const loginData = await loginResponse.json();
-    const authToken = loginData.token;
+    authToken = loginData.token;
     
     // Create a new order
     const orderPayload = {
       items: [
         {
-          productId: '69c25db1a6946c94730b9026',
+          productId: '69c8ba0fb7dcc4fc6c590571',
           quantity: 1,
           productName: 'Premium Wireless Headphones',
           productPrice: 299
@@ -45,12 +46,17 @@ test.describe('API PATCH Request scenarios', () => {
 
     expect(orderResponse.ok()).toBeTruthy();
     const orderData = await orderResponse.json();
-    orderId = orderData.orderId || orderData._id || orderData.id;
+    console.log('Order Creation Response:', orderData);
+    orderId = orderData.orderId || orderData._id || orderData.id || orderData.order?._id || orderData.order?.id;
     console.log('Created Order ID:', orderId);
   });
 
   test('should cancel an order', async ({ request }) => {
-    const response = await request.patch(`http://localhost:3000/api/orders/${orderId}/cancel`);
+    const response = await request.patch(`http://localhost:3000/api/orders/${orderId}/cancel`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
 
     expect(response.ok()).toBeTruthy();
     expect(response.status()).toBe(200);
@@ -59,10 +65,11 @@ test.describe('API PATCH Request scenarios', () => {
     console.log('Cancel Order Response:', responseBody);
     
     // Verify response structure
-    expect(responseBody).toHaveProperty('success');
-    expect(responseBody.success).toBe(true);
     expect(responseBody).toHaveProperty('message');
-    expect(responseBody.message).toBe(`Order ID ${orderId} cancelled successfully`);
+    expect(responseBody.message).toBe('Order cancelled successfully');
+    expect(responseBody).toHaveProperty('order');
+    expect(responseBody.order).toHaveProperty('status');
+    expect(responseBody.order.status).toBe('cancelled');
   });
 
 });
