@@ -1,0 +1,11 @@
+{
+  "name": "js-oop-examples",
+  "version": "1.0.0",
+  "description": "A project demonstrating object-oriented programming concepts in JavaScript, including encapsulation and inheritance.",
+  "main": "oops-class.js",
+  "scripts": {
+    "start": "node oops-class.js"
+  },
+  "author": "Your Name",
+  "license": "MIT"
+}
