@@ -1,27 +1,28 @@
-class Person {
-    name: string;
-    age: number;
+class Car {
+    color: string;
+    model: number;
 
-    constructor(name: string, age: number) {
-        this.name = name;
-        this.age = age;
+    constructor(color: string, model: number) {
+        this.color = color;
+        this.model = model;
     }
 
-    getName(): string {
-        return this.name;
+    drive(): void {
+        console.log(`The ${this.color} car is driving.`);
     }
 
-    getAge(): number {
-        return this.age;
+    stop(): void {
+        console.log(`The ${this.color} car has stopped.`);
     }
 
-    setName(name: string): void {
-        this.name = name;
-    }
-
-    setAge(age: number): void {
-        this.age = age;
-    }
 }
 
-export default Person;
+export default Car;
+
+const bmw = new Car("red", 2020);
+bmw.drive();
+bmw.stop();
+
+const audi = new Car("blue", 2021);
+audi.drive();
+audi.stop();

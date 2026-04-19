@@ -15,13 +15,6 @@ class Person {
         return this.age;
     }
 
-    setName(name: string): void {
-        this.name = name;
-    }
-
-    setAge(age: number): void {
-        this.age = age;
-    }
 }
 
 export default Person;
@@ -38,9 +31,6 @@ class Employee extends Person {
         return this.jobTitle;
     }
 
-    setJobTitle(jobTitle: string): void {
-        this.jobTitle = jobTitle;
-    }
 }
 
 export { Employee };

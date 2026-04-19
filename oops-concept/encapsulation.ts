@@ -15,14 +15,6 @@ class PersonPublic {
     getAge(): number {
         return this.age;
     }
-
-    setName(name: string): void {
-        this.name = name;
-    }
-
-    setAge(age: number): void {
-        this.age = age;
-    }
 }
 
 // Example 2: Class with PRIVATE properties
