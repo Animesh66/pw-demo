@@ -31,6 +31,7 @@ export class HomePage extends BasePage {
      */
     async navigateToHome(): Promise<void> {
         await this.goto('http://localhost:5173/');
+        await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
     }
 
     /**

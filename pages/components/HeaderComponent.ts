@@ -69,6 +69,7 @@ export class HeaderComponent {
      */
     async clickCart(): Promise<void> {
         await this.cartLink.click();
+        await this.page.waitForURL('**/cart');
     }
 
     /**

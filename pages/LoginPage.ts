@@ -56,6 +56,7 @@ export class LoginPage extends BasePage {
      */
     async clickSignIn(): Promise<void> {
         await this.signInButton.click();
+        await this.page.waitForURL('**/'); // Wait for redirect after login
     }
 
     /**
