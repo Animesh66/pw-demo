@@ -136,7 +136,6 @@ export class CartPage extends BasePage {
      * Check if cart page loaded correctly
      */
     async isPageLoaded(): Promise<boolean> {
-        await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
         return await this.pageHeading.isVisible();
     }
 
