@@ -34,6 +34,7 @@ export class ErrorPage extends BasePage {
      * Check if error page is displayed
      */
     async isErrorPageDisplayed(): Promise<boolean> {
+        await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
         return await this.pageHeading.isVisible();
     }
 
@@ -70,6 +71,7 @@ export class ErrorPage extends BasePage {
      * Check if payment failed
      */
     async isPaymentFailed(): Promise<boolean> {
+        await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
         return await this.pageHeading.isVisible() && 
                (await this.getUrl()).includes('/error');
     }

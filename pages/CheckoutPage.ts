@@ -94,6 +94,15 @@ export class CheckoutPage extends BasePage {
      */
     async submitPayment(): Promise<void> {
         await this.payButton.click();
+        // Wait for navigation after payment is processed
+        await this.page.waitForURL((url) => !url.pathname.includes('/checkout'), { timeout: 15000 });
+    }
+
+    /**
+     * Attempt to click pay button (may not navigate if validation fails)
+     */
+    async attemptPayment(): Promise<void> {
+        await this.payButton.click();
     }
 
     /**
@@ -120,6 +129,7 @@ export class CheckoutPage extends BasePage {
      * Check if checkout page loaded correctly
      */
     async isPageLoaded(): Promise<boolean> {
+        await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
         return await this.pageHeading.isVisible();
     }
 
@@ -134,6 +144,10 @@ export class CheckoutPage extends BasePage {
      * Check if payment form is displayed
      */
     async isPaymentFormDisplayed(): Promise<boolean> {
+        await this.cardNumberInput.waitFor({ state: 'visible', timeout: 10000 });
+        await this.cardholderNameInput.waitFor({ state: 'visible', timeout: 10000 });
+        await this.expiryDateInput.waitFor({ state: 'visible', timeout: 10000 });
+        await this.cvvInput.waitFor({ state: 'visible', timeout: 10000 });
         return await this.cardNumberInput.isVisible() &&
                await this.cardholderNameInput.isVisible() &&
                await this.expiryDateInput.isVisible() &&
