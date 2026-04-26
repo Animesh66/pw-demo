@@ -80,16 +80,6 @@ export class WaitHelpers {
     }
 
     /**
-     * Wait for network to be idle
-     */
-    static async waitForNetworkIdle(
-        page: Page, 
-        timeout: number = EnvironmentConfig.TIMEOUTS.NAVIGATION
-    ): Promise<void> {
-        await page.waitForLoadState('networkidle', { timeout });
-    }
-
-    /**
      * Wait for specific number of milliseconds
      */
     static async waitForTimeout(milliseconds: number): Promise<void> {

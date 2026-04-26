@@ -113,7 +113,7 @@ test.describe('Order Placement Flow', () => {
      * 5. Submit payment
      * 6. Verify order is placed successfully
      */
-    test('TC01 - Place order successfully with valid payment details', async ({ 
+    test('TC01 - Place order successfully with valid payment details', { tag: '@order' }, async ({ 
         homePage, 
         cartPage, 
         checkoutPage,
@@ -225,7 +225,7 @@ test.describe('Order Placement Flow', () => {
      * 5. Submit payment
      * 6. Verify payment fails with appropriate error message
      */
-    test('TC02 - Order placement fails with invalid card number', async ({ 
+    test('TC02 - Order placement fails with invalid card number', { tag: '@order' }, async ({ 
         homePage, 
         cartPage, 
         checkoutPage,
@@ -325,7 +325,7 @@ test.describe('Order Placement Flow', () => {
      * 5. Attempt to submit payment
      * 6. Verify validation error or payment cannot be submitted
      */
-    test('TC03 - Cannot submit payment with empty card number', async ({ 
+    test('TC03 - Cannot submit payment with empty card number', { tag: '@order' }, async ({ 
         homePage, 
         cartPage, 
         checkoutPage,
@@ -379,7 +379,7 @@ test.describe('Order Placement Flow', () => {
      * 3. Update product quantities
      * 4. Verify total amount updates correctly
      */
-    test('TC04 - Verify cart quantity and amount updates', async ({ 
+    test('TC04 - Verify cart quantity and amount updates', { tag: '@order' }, async ({ 
         homePage, 
         cartPage 
     }) => {
