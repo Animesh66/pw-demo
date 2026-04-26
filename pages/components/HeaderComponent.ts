@@ -37,7 +37,6 @@ export class HeaderComponent {
      */
     async clickLogo(): Promise<void> {
         await this.logoLink.click();
-        await this.page.waitForLoadState('networkidle');
     }
 
     /**
@@ -46,7 +45,6 @@ export class HeaderComponent {
     async searchProduct(searchTerm: string): Promise<void> {
         await this.searchBox.fill(searchTerm);
         await this.searchBox.press('Enter');
-        await this.page.waitForLoadState('networkidle');
     }
 
     /**
@@ -54,7 +52,6 @@ export class HeaderComponent {
      */
     async clickShopNow(): Promise<void> {
         await this.shopNowLink.click();
-        await this.page.waitForLoadState('networkidle');
     }
 
     /**

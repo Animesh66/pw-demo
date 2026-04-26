@@ -1,90 +1,146 @@
 import { defineConfig, devices } from '@playwright/test';
+import { EnvironmentConfig } from './config/environment.config';
 
 /**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
-
-/**
- * See https://playwright.dev/docs/test-configuration.
+ * Playwright Test Configuration
+ * See https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: './tests',
-  /* Run tests in files in parallel */
-  fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-
-  use: {
-    /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'http://localhost:5173',
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    testDir: './tests',
     
-    /* Take screenshot on failure */
-    screenshot: 'only-on-failure',
+    /* Maximum time one test can run */
+    timeout: EnvironmentConfig.TIMEOUTS.DEFAULT,
     
-    /* Capture video on failure */
-    video: 'retain-on-failure',
-  },
-
-  /* Configure projects for major browsers */
-  projects: [
-    {
-      name: 'chromium',
-      use: { 
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1920, height: 1080 },
-      },
+    /* Run tests in files in parallel */
+    fullyParallel: EnvironmentConfig.EXECUTION.FULLY_PARALLEL,
+    
+    /* Fail the build on CI if you accidentally left test.only in the source code */
+    forbidOnly: EnvironmentConfig.IS_CI,
+    
+    /* Retry on CI only */
+    retries: EnvironmentConfig.IS_CI 
+        ? EnvironmentConfig.RETRY.RETRIES_CI 
+        : EnvironmentConfig.RETRY.RETRIES,
+    
+    /* Opt out of parallel tests on CI for stability */
+    workers: EnvironmentConfig.IS_CI ? 1 : EnvironmentConfig.EXECUTION.WORKERS,
+    
+    /* Reporter configuration */
+    reporter: [
+        ['html', { outputFolder: 'playwright-report', open: 'never' }],
+        ['list'],
+        ['json', { outputFile: 'test-results/test-results.json' }],
+        ...(EnvironmentConfig.IS_CI 
+            ? [['junit', { outputFile: 'test-results/junit.xml' }] as const] 
+            : []
+        ),
+    ],
+    
+    /* Shared settings for all projects */
+    use: {
+        /* Base URL to use in actions like `await page.goto('/')` */
+        baseURL: EnvironmentConfig.BASE_URL,
+        
+        /* Collect trace when retrying the failed test */
+        trace: EnvironmentConfig.CAPTURE.TRACE_ON_FAILURE ? 'on-first-retry' : 'off',
+        
+        /* Screenshot configuration */
+        screenshot: EnvironmentConfig.CAPTURE.SCREENSHOT_ON_FAILURE 
+            ? 'only-on-failure' 
+            : 'off',
+        
+        /* Video configuration */
+        video: EnvironmentConfig.CAPTURE.VIDEO_ON_FAILURE 
+            ? 'retain-on-failure' 
+            : 'off',
+        
+        /* Navigation timeout */
+        navigationTimeout: EnvironmentConfig.TIMEOUTS.NAVIGATION,
+        
+        /* Action timeout */
+        actionTimeout: EnvironmentConfig.TIMEOUTS.ACTION,
+        
+        /* Emulate user locale */
+        locale: 'en-US',
+        
+        /* Emulate timezone */
+        timezoneId: 'America/New_York',
+        
+        /* Ignore HTTPS errors */
+        ignoreHTTPSErrors: true,
+        
+        /* Browser context options */
+        contextOptions: {
+            strictSelectors: false,
+        },
     },
 
-    // Uncomment to test on other browsers
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
+    /* Configure projects for major browsers */
+    projects: [
+        {
+            name: 'chromium',
+            use: { 
+                ...devices['Desktop Chrome'],
+                viewport: EnvironmentConfig.BROWSER.VIEWPORT,
+                launchOptions: {
+                    slowMo: EnvironmentConfig.BROWSER.SLOW_MO,
+                },
+            },
+        },
 
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
+        {
+            name: 'firefox',
+            use: { 
+                ...devices['Desktop Firefox'],
+                viewport: EnvironmentConfig.BROWSER.VIEWPORT,
+                launchOptions: {
+                    slowMo: EnvironmentConfig.BROWSER.SLOW_MO,
+                },
+            },
+        },
 
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
+        {
+            name: 'webkit',
+            use: { 
+                ...devices['Desktop Safari'],
+                viewport: EnvironmentConfig.BROWSER.VIEWPORT,
+                launchOptions: {
+                    slowMo: EnvironmentConfig.BROWSER.SLOW_MO,
+                },
+            },
+        },
 
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
-  ],
+        /* Test against mobile viewports */
+        {
+            name: 'Mobile Chrome',
+            use: { 
+                ...devices['Pixel 5'],
+                launchOptions: {
+                    slowMo: EnvironmentConfig.BROWSER.SLOW_MO,
+                },
+            },
+        },
+        
+        {
+            name: 'Mobile Safari',
+            use: { 
+                ...devices['iPhone 12'],
+                launchOptions: {
+                    slowMo: EnvironmentConfig.BROWSER.SLOW_MO,
+                },
+            },
+        },
+    ],
 
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+    /* Global setup and teardown */
+    // globalSetup: require.resolve('./tests/global-setup.ts'),
+    // globalTeardown: require.resolve('./tests/global-teardown.ts'),
+
+    /* Run your local dev server before starting the tests */
+    // webServer: {
+    //     command: 'npm run start',
+    //     url: EnvironmentConfig.BASE_URL,
+    //     reuseExistingServer: !EnvironmentConfig.IS_CI,
+    //     timeout: 120000,
+    // },
 });

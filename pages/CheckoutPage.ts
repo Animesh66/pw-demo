@@ -1,6 +1,7 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { HeaderComponent } from './components/HeaderComponent';
+import { EnvironmentConfig } from '../config/environment.config';
 
 /**
  * CheckoutPage - Represents the checkout/payment page
@@ -42,7 +43,7 @@ export class CheckoutPage extends BasePage {
      * Navigate to checkout page
      */
     async navigateToCheckout(): Promise<void> {
-        await this.goto('http://localhost:5173/checkout');
+        await this.goto(EnvironmentConfig.URLS.CHECKOUT);
     }
 
     /**

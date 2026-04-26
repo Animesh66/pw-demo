@@ -1,6 +1,7 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { HeaderComponent } from './components/HeaderComponent';
+import { EnvironmentConfig } from '../config/environment.config';
 
 /**
  * CartPage - Represents the shopping cart page
@@ -54,7 +55,7 @@ export class CartPage extends BasePage {
      * Navigate to cart page
      */
     async navigateToCart(): Promise<void> {
-        await this.goto('http://localhost:5173/cart');
+        await this.goto(EnvironmentConfig.URLS.CART);
     }
 
     /**

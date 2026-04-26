@@ -1,6 +1,7 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { HeaderComponent } from './components/HeaderComponent';
+import { EnvironmentConfig } from '../config/environment.config';
 
 /**
  * LoginPage - Represents the login page
@@ -34,7 +35,7 @@ export class LoginPage extends BasePage {
      * Navigate to login page
      */
     async navigateToLogin(): Promise<void> {
-        await this.goto('http://localhost:5173/login');
+        await this.goto(EnvironmentConfig.URLS.LOGIN);
     }
 
     /**

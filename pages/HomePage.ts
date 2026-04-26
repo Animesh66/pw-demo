@@ -1,6 +1,7 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { HeaderComponent } from './components/HeaderComponent';
+import { EnvironmentConfig } from '../config/environment.config';
 
 /**
  * HomePage - Represents the home/landing page
@@ -30,8 +31,8 @@ export class HomePage extends BasePage {
      * Navigate to home page
      */
     async navigateToHome(): Promise<void> {
-        await this.goto('http://localhost:5173/');
-        await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
+        await this.goto(EnvironmentConfig.URLS.HOME);
+        await this.pageHeading.waitFor({ state: 'visible', timeout: EnvironmentConfig.TIMEOUTS.MEDIUM });
     }
 
     /**
