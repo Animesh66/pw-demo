@@ -6,66 +6,136 @@ A robust, scalable test automation framework built with Playwright and TypeScrip
 
 - **Page Object Model (POM)** - Clean separation of test logic and page interactions
 - **Component-Based Architecture** - Reusable UI components (e.g., HeaderComponent)
+- **Storage State Authentication** - Login once, reuse across all tests
+- **Setup Project Pattern** - Playwright's recommended authentication approach
 - **Data-Driven Testing** - CSV-based test data management
 - **TypeScript** - Full type safety and IntelliSense support
 - **Environment Configuration** - Centralized config with .env support
 - **Custom Utilities** - Wait helpers, action helpers, assertion helpers
 - **Comprehensive Logging** - Custom logger with file and console output
 - **Test Fixtures** - Dependency injection pattern for page objects
+- **Allure Reporting** - Beautiful, detailed test reports
 - **Code Quality** - ESLint and Prettier configuration
 - **CI/CD Ready** - GitHub Actions workflow included
 - **Multiple Browsers** - Support for Chromium, Firefox, WebKit, and mobile
 - **Parallel Execution** - Fast test execution with configurable workers
-- **Rich Reporting** - HTML, JSON, and JUnit reports
 
-## 📁 Project Structure
+## 🏛️ Framework Architecture
+
+### Authentication Strategy
+
+The framework uses Playwright's recommended **Setup Project Pattern** for authentication:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  Setup Project (auth.setup.ts)                          │
+│  • Runs once before all tests                           │
+│  • Authenticates with test credentials                  │
+│  • Saves storage state to playwright/.auth/user.json    │
+└─────────────────────────────────────────────────────────┘
+                          ↓
+        ┌─────────────────┴─────────────────┐
+        ↓                                     ↓
+┌───────────────────┐              ┌───────────────────┐
+│  Browser Projects │              │  Non-Auth Tests   │
+│  (chromium, etc.) │              │  (registration)   │
+│  • Depend on setup│              │  • No storage     │
+│  • Use saved auth │              │  • Reset state    │
+└───────────────────┘              └───────────────────┘
+```
+
+**Benefits:**
+- ✅ **Fast**: Login happens once, not before each test
+- ✅ **Reliable**: Reuses authenticated state via cookies/localStorage
+- ✅ **Maintainable**: Single source of authentication logic
+- ✅ **Flexible**: Easy to add non-authenticated tests
+
+### Project Structure
 
 ```
 pw-demo/
-├── config/                     # Configuration files
-│   └── environment.config.ts   # Environment-specific settings
-├── constants/                  # Constants and enums
-│   └── test.constants.ts       # Test-wide constants
-├── data/                       # Test data
-│   └── csv/                    # CSV data files
+├── config/                         # Configuration files
+│   ├── auth.config.ts             # Authentication paths
+│   └── environment.config.ts      # Environment settings
+├── constants/                      # Constants and enums
+│   └── test.constants.ts
+├── data/                          # Test data
+│   └── csv/                       # CSV data files
 │       ├── users.csv
 │       ├── payment-cards.csv
 │       └── test-scenarios.csv
-├── fixtures/                   # Test data fixtures
-│   ├── TestDataFixtures.ts    # Data access layer
+├── fixtures/                      # Test data fixtures
+│   ├── TestDataFixtures.ts
 │   └── index.ts
-├── logs/                       # Test execution logs
-├── pages/                      # Page Object Models
-│   ├── BasePage.ts            # Base page with common methods
+├── logs/                          # Test execution logs (gitignored)
+├── pages/                         # Page Object Models
+│   ├── BasePage.ts               # Base page with common methods
 │   ├── HomePage.ts
 │   ├── LoginPage.ts
 │   ├── CartPage.ts
 │   ├── CheckoutPage.ts
 │   ├── ErrorPage.ts
-│   └── components/            # Reusable page components
+│   └── components/               # Reusable page components
 │       └── HeaderComponent.ts
-├── playwright-report/          # HTML test reports
-├── test-results/              # Test execution results
-├── tests/                     # Test specifications
-│   ├── base/
-│   │   └── BaseTest.ts       # Custom test fixtures
-│   └── order.spec.ts         # Test suites
-├── types/                     # TypeScript type definitions
+├── playwright/.auth/              # Authentication storage (gitignored)
+│   └── user.json                 # Saved login state
+├── playwright-report/             # HTML test reports (gitignored)
+├── allure-results/               # Allure raw data (gitignored)
+├── allure-report/                # Allure HTML report (gitignored)
+├── test-results/                 # Test execution results (gitignored)
+├── tests/                        # Test specifications
+│   ├── auth.setup.ts            # Authentication setup (runs first)
+│   ├── order-happy-path.spec.ts # Positive order tests
+│   ├── order-negative.spec.ts   # Negative order tests
+│   ├── user-registration.spec.ts # Non-authenticated tests
+│   └── base/
+│       └── BaseTest.ts          # Custom test fixtures
+├── types/                        # TypeScript type definitions
 │   └── test-data.types.ts
-├── utils/                     # Utility functions
-│   ├── ActionHelpers.ts      # Common page actions
-│   ├── AssertionHelpers.ts   # Custom assertions
-│   ├── CSVOperations.ts      # CSV file operations
-│   ├── Logger.ts             # Custom logging utility
-│   ├── WaitHelpers.ts        # Wait utilities
+├── utils/                        # Utility functions
+│   ├── ActionHelpers.ts
+│   ├── AssertionHelpers.ts
+│   ├── CSVOperations.ts
+│   ├── Logger.ts
+│   ├── WaitHelpers.ts
 │   └── index.ts
-├── .env                       # Environment variables
-├── .env.example              # Environment template
-├── .eslintrc.js              # ESLint configuration
-├── .prettierrc.json          # Prettier configuration
-├── playwright.config.ts       # Playwright configuration
-├── tsconfig.json             # TypeScript configuration
-└── package.json              # Dependencies and scripts
+├── .env                          # Environment variables
+├── .eslintrc.js                  # ESLint configuration
+├── .prettierrc.json              # Prettier configuration
+├── playwright.config.ts          # Playwright configuration
+├── tsconfig.json                 # TypeScript configuration
+└── package.json                  # Dependencies and scripts
+```
+
+### Test Execution Flow
+
+```
+1. Setup Project (auth.setup.ts)
+   └─> Login with test credentials
+   └─> Save storage state
+   
+2. Browser Projects (chromium, firefox, webkit, etc.)
+   └─> Load storage state (already authenticated)
+   └─> Run tests in parallel
+   └─> Each test starts on home page (logged in)
+   
+3. Non-Auth Tests (registration, etc.)
+   └─> Reset storage state
+   └─> Run without authentication
+```
+
+### Page Object Model
+
+```
+BasePage (Abstract)
+  ├─ Common methods (goto, click, fill, etc.)
+  ├─ Wait helpers
+  └─ Logging integration
+     ↓
+HomePage, CartPage, CheckoutPage, ErrorPage
+  ├─ Page-specific locators
+  ├─ Page-specific methods
+  └─ Component composition (HeaderComponent)
 ```
 
 ## 🛠️ Setup
@@ -99,179 +169,287 @@ cp .env.example .env
 # Edit .env with your configuration
 ```
 
-## 🎯 Running Tests
-
-### Run all tests
+5. Verify installation
 ```bash
 npm test
 ```
 
-### Run tests in headed mode (see browser)
+## 🎯 Running Tests
+
+### Quick Start Commands
+
 ```bash
-npm run test:headed
+# Run all tests (with authentication setup)
+npm test
+
+# Run specific test suites
+npm run test:happy-path      # Order placement - happy path
+npm run test:negative        # Order placement - negative scenarios
+npm run test:registration    # User registration (no auth)
+npm run test:order          # All order tests (@order tag)
+
+# Run with different browsers
+npm run test:chrome         # Chromium only
+npm run test:firefox        # Firefox only
+npm run test:webkit         # Safari/WebKit only
+npm run test:mobile         # Mobile Chrome & Safari
+npm run test:all-browsers   # All desktop browsers
+
+# Run with different modes
+npm run test:headed         # See browser window
+npm run test:debug          # Debug mode with inspector
+npm run test:ui             # Interactive UI mode
+npm run test:parallel       # Parallel execution (4 workers)
+npm run test:serial         # Serial execution (1 worker)
+
+# Run by tags
+npm run test:smoke          # Smoke tests only
+npm run test:regression     # Regression tests only
 ```
 
-### Run tests in debug mode
-```bash
-npm run test:debug
-```
+### Advanced Test Execution
 
-### Run tests with UI mode
 ```bash
-npm run test:ui
-```
+# Run specific test file
+npx playwright test tests/order-happy-path.spec.ts
 
-### Run tests on specific browser
-```bash
-npm run test:chrome
-npm run test:firefox
-npm run test:webkit
-```
+# Run specific test by name
+npx playwright test -g "TC01"
 
-### Run specific test tags
-```bash
-npm run test:smoke
-npm run test:regression
-```
+# Run tests and update snapshots
+npx playwright test --update-snapshots
 
-### Run tests in parallel
-```bash
-npm run test:parallel
-```
+# Run with maximum workers
+npx playwright test --workers=8
 
-### Run tests serially
-```bash
-npm run test:serial
+# Run only failed tests
+npx playwright test --last-failed
+
+# Run with specific timeout
+npx playwright test --timeout=60000
 ```
 
 ## 📊 Reports
 
-### View HTML report
+### Playwright HTML Report (Default)
+
 ```bash
+# View HTML report (opens automatically on failure)
 npm run test:report
+
+# Or manually
+npx playwright show-report
 ```
 
-### View trace
+### Allure Report (Enhanced)
+
 ```bash
-npm run test:trace
+# Run tests with Allure reporting
+npm run test:allure
+
+# Generate Allure HTML report
+npm run allure:generate
+
+# Open Allure report in browser
+npm run allure:open
+
+# Serve Allure report (with live reload)
+npm run allure:serve
+
+# Complete workflow: test + generate + open
+npm run test:with-allure
+
+# Clean Allure artifacts
+npm run allure:clean
 ```
 
-Reports are generated in `playwright-report/` directory.
+**Allure Features:**
+- ✅ Beautiful, detailed reports
+- ✅ Test categorization and trends
+- ✅ Screenshot attachments
+- ✅ Execution timeline
+- ✅ Test history and retries
+- ✅ Environment info
+
+### Trace Viewer
+
+```bash
+# View trace for debugging
+npm run test:trace
+
+# Or run with trace
+npx playwright test --trace on
+```
 
 ## 🧪 Writing Tests
 
-### Basic Test Structure
+### Authenticated Tests (Default)
+
+Tests automatically start with authenticated state:
 
 ```typescript
 import { test, expect } from './base/BaseTest';
-import { TestDataFixtures } from '../fixtures';
+import { Logger } from '../utils';
 
-test.describe('Feature Name', () => {
-    test.beforeAll(async () => {
-        // Setup before all tests
-    });
-
-    test.beforeEach(async ({ homePage }) => {
-        // Setup before each test
+test.describe('Order Placement', () => {
+    test.beforeEach(async ({ homePage }, testInfo) => {
+        Logger.testStart(testInfo.title);
+        // Already authenticated via storage state!
         await homePage.navigateToHome();
     });
 
-    test('should perform action', async ({ homePage, cartPage }) => {
-        // Test steps
+    test('TC01 - Place order', { tag: '@order' }, async ({ 
+        homePage, 
+        cartPage, 
+        checkoutPage 
+    }) => {
+        // User is already logged in
         await homePage.addFirstProductToCart();
         await homePage.header.clickCart();
         
-        // Assertions
         expect(await cartPage.isPageLoaded()).toBeTruthy();
-    });
-
-    test.afterEach(async ({ page }, testInfo) => {
-        // Cleanup after each test
     });
 });
 ```
 
-### Using Test Data Fixtures
+### Non-Authenticated Tests
+
+For tests that don't need authentication (registration, login, etc.):
 
 ```typescript
-import { TestDataFixtures } from '../fixtures';
+import { test, expect } from '@playwright/test';
+import { Logger } from '../utils';
 
-const user = TestDataFixtures.getValidUser();
-const card = TestDataFixtures.getValidCard();
+// Reset storage state to avoid authentication
+test.use({ storageState: { cookies: [], origins: [] } });
 
-await loginPage.login(user.email, user.password);
-await checkoutPage.completeCheckout(
-    card.number,
-    card.holderName,
-    card.expiry,
-    card.cvv
+test.describe('User Registration', () => {
+    test('TC_REG_01 - Access registration page', async ({ page }) => {
+        // User is NOT logged in
+        await page.goto('/register');
+        
+        expect(page.url()).toContain('/register');
+    });
+});
+```
+
+### Using Test Data
+
+```typescript
+import { CSVOperations } from '../utils';
+
+// Read CSV data
+const userData = CSVOperations.readCSVRow('users', 0);
+const validCards = CSVOperations.filterCSVByColumn('payment-cards', 'isValid', 'true');
+
+// Use in tests
+await loginPage.login(userData.email, userData.password);
+await checkoutPage.fillPaymentForm(
+    validCards[0].cardNumber,
+    validCards[0].holderName,
+    validCards[0].expiryDate,
+    validCards[0].cvv
 );
 ```
 
-### Using Helper Utilities
+### Using Logger
 
 ```typescript
-import { WaitHelpers, ActionHelpers, AssertionHelpers } from '../utils';
+import { Logger } from '../utils';
 
-// Wait helpers
-await WaitHelpers.waitForVisible(locator);
-await WaitHelpers.waitForUrlContains(page, '/cart');
+test.beforeAll(async () => {
+    Logger.initialize();
+    Logger.info('=== Test Suite Started ===');
+});
 
-// Action helpers
-await ActionHelpers.click(button, { retries: 3 });
-await ActionHelpers.fill(input, 'value', { validate: true });
-
-// Assertion helpers
-await AssertionHelpers.assertElementInteractive(button);
-await AssertionHelpers.assertPriceFormat('$99.99');
+test('example', async ({ page }) => {
+    Logger.step(1, 'Navigate to login page');
+    await page.goto('/login');
+    Logger.success('Navigation successful');
+    
+    Logger.step(2, 'Fill credentials');
+    // ... test steps
+    Logger.warn('Using test credentials');
+    
+    Logger.error('Test failed');  // Only if something goes wrong
+});
 ```
 
-## 🏗️ Page Object Model
+## 🏗️ Creating New Page Objects
 
-### Creating a New Page Object
+### 1. Create the Page Class
 
 ```typescript
+// pages/ProductPage.ts
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { HeaderComponent } from './components/HeaderComponent';
-import { EnvironmentConfig } from '../config/environment.config';
 
-export class NewPage extends BasePage {
+export class ProductPage extends BasePage {
     readonly header: HeaderComponent;
     
-    private readonly elementLocator: Locator;
+    private readonly productTitle: Locator;
+    private readonly addToCartButton: Locator;
+    private readonly priceLabel: Locator;
 
     constructor(page: Page) {
         super(page);
         this.header = new HeaderComponent(page);
-        this.elementLocator = page.locator('#element-id');
+        
+        this.productTitle = page.locator('h1.product-title');
+        this.addToCartButton = page.locator('button[data-testid="add-to-cart"]');
+        this.priceLabel = page.locator('.price');
     }
 
-    async navigateToPage(): Promise<void> {
-        await this.goto(EnvironmentConfig.URLS.NEW_PAGE);
+    async navigateToProduct(productId: string): Promise<void> {
+        await this.goto(`/product/${productId}`);
     }
 
-    async performAction(): Promise<void> {
-        await this.elementLocator.click();
+    async addToCart(): Promise<void> {
+        await this.addToCartButton.click();
+        await this.page.waitForLoadState('networkidle');
+    }
+
+    async getPrice(): Promise<string> {
+        return await this.priceLabel.textContent() || '';
+    }
+
+    async isPageLoaded(): Promise<boolean> {
+        await this.productTitle.waitFor({ state: 'visible', timeout: 10000 });
+        return await this.productTitle.isVisible();
     }
 }
 ```
 
-### Adding to Base Test Fixtures
+### 2. Add to BaseTest Fixtures
 
 ```typescript
-// In tests/base/BaseTest.ts
+// tests/base/BaseTest.ts
+import { ProductPage } from '../../pages/ProductPage';
+
 type PageObjects = {
     // ... existing pages
-    newPage: NewPage;
+    productPage: ProductPage;
 };
 
 export const test = base.extend<PageObjects>({
     // ... existing fixtures
-    newPage: async ({ page }, use) => {
-        const newPage = new NewPage(page);
-        await use(newPage);
+    productPage: async ({ page }, use) => {
+        const productPage = new ProductPage(page);
+        await use(productPage);
     },
+});
+```
+
+### 3. Use in Tests
+
+```typescript
+test('should view product details', async ({ productPage }) => {
+    await productPage.navigateToProduct('123');
+    expect(await productPage.isPageLoaded()).toBeTruthy();
+    
+    const price = await productPage.getPrice();
+    expect(price).toMatch(/\$\d+/);
 });
 ```
 
@@ -288,8 +466,13 @@ TEST_TIMEOUT=30000
 WORKERS=4
 
 # Browser Configuration
-HEADLESS=false
+HEADLESS=true
 SLOW_MO=0
+
+# Capture Settings
+SCREENSHOT_ON_FAILURE=true
+VIDEO_ON_FAILURE=false
+TRACE_ON_FAILURE=true
 
 # Logging
 LOG_LEVEL=info
@@ -297,13 +480,34 @@ LOG_LEVEL=info
 
 ### Playwright Configuration
 
-Edit `playwright.config.ts` to customize:
-- Test directory
-- Timeouts
-- Retries
-- Parallel execution
-- Browser projects
-- Reporting
+Key settings in `playwright.config.ts`:
+
+```typescript
+{
+    testDir: './tests',
+    timeout: 30000,
+    fullyParallel: true,
+    retries: 0, // 2 on CI
+    workers: 4, // 1 on CI
+    
+    reporter: [
+        ['html'],
+        ['list'],
+        ['json'],
+        ['allure-playwright']
+    ],
+    
+    projects: [
+        { name: 'setup', testMatch: /.*\.setup\.ts/ },
+        { 
+            name: 'chromium',
+            use: { storageState: 'playwright/.auth/user.json' },
+            dependencies: ['setup']
+        },
+        // ... more browsers
+    ]
+}
+```
 
 ## 📝 Logging
 
@@ -312,102 +516,222 @@ The framework includes a custom logger that writes to both console and file:
 ```typescript
 import { Logger } from '../utils/Logger';
 
+// Initialize (usually in beforeAll)
+Logger.initialize();
+
+// Log levels
 Logger.info('Information message');
 Logger.debug('Debug message');
 Logger.warn('Warning message');
 Logger.error('Error message');
 Logger.success('Success message');
+
+// Test lifecycle
+Logger.testStart('Test Name');
 Logger.step(1, 'Step description');
+Logger.testEnd('Test Name', 'PASSED');
+
+// Get log file path
+const logPath = Logger.getLogFilePath();
 ```
 
-Logs are saved in `logs/` directory with timestamps.
+Logs are saved in `logs/` directory with format: `test-execution-YYYY-MM-DD_HH-mm-ss.log`
 
 ## 🧹 Code Quality
 
-### Run linter
-```bash
-npm run lint
-```
+### Linting
 
-### Fix linting issues
 ```bash
+# Check for linting issues
+npm run lint
+
+# Auto-fix linting issues
 npm run lint:fix
 ```
 
-### Format code
-```bash
-npm run format
-```
+### Formatting
 
-### Check formatting
 ```bash
+# Format all files
+npm run format
+
+# Check formatting (CI)
 npm run format:check
 ```
 
-### Type checking
+### Type Checking
+
 ```bash
+# Check TypeScript types
 npm run type-check
+```
+
+### Clean Artifacts
+
+```bash
+# Clean all generated files
+npm run clean
+
+# Clean authentication state (force re-login)
+npm run clean:auth
 ```
 
 ## 🔄 CI/CD
 
-The framework includes GitHub Actions workflow for continuous integration:
+### GitHub Actions Workflow
 
-- Runs on push and pull requests
-- Executes tests on multiple browsers
-- Generates and uploads test reports
-- Archives test results
+The framework includes a CI/CD workflow that:
+- ✅ Runs on push and pull requests
+- ✅ Executes tests on multiple browsers
+- ✅ Generates Allure and HTML reports
+- ✅ Archives test results and logs
+- ✅ Uploads artifacts
 
 Workflow file: `.github/workflows/playwright.yml`
 
+### CI Commands
+
+```bash
+# Install dependencies with browsers
+npm run ci:install
+
+# Run tests with multiple reporters
+npm run ci:test
+```
+
 ## 📚 Best Practices
 
-1. **Keep tests independent** - Each test should be able to run standalone
-2. **Use meaningful test names** - Describe what the test does
+### Test Design
+1. **Keep tests independent** - Each test should run standalone
+2. **Use meaningful test names** - Describe what the test verifies
 3. **Follow AAA pattern** - Arrange, Act, Assert
-4. **Use page objects** - Don't put selectors in tests
-5. **Avoid hard waits** - Use built-in waiting mechanisms
-6. **Keep tests focused** - One test should verify one thing
-7. **Use test data fixtures** - Centralize test data management
-8. **Log important steps** - Use Logger for better debugging
-9. **Handle cleanup** - Use afterEach/afterAll hooks
-10. **Keep selectors resilient** - Use data-testid or role-based selectors
+4. **One assertion per test** - Focus on a single behavior
+5. **Use test.describe** - Group related tests together
+
+### Page Objects
+6. **Keep selectors in page objects** - Never in test files
+7. **Use data-testid attributes** - More stable than CSS selectors
+8. **Create helper methods** - Abstract complex interactions
+9. **Avoid test logic in pages** - Pages should be dumb
+10. **Return page objects** - For method chaining
+
+### Authentication
+11. **Use storage state** - Don't login before each test
+12. **Reset state for non-auth tests** - Use `test.use()`
+13. **Clean auth state** - `npm run clean:auth` if needed
+
+### Data Management
+14. **Use CSV for test data** - Centralize in `data/csv/`
+15. **Keep sensitive data in .env** - Never commit credentials
+16. **Use data-driven tests** - Parameterize test inputs
+
+### Logging & Debugging
+17. **Log test steps** - Use Logger.step() for clarity
+18. **Capture on failure** - Screenshots, videos, traces
+19. **Use UI mode** - For interactive debugging
+20. **Check Allure reports** - Rich test execution details
 
 ## 🐛 Debugging
 
-### Debug mode
+### Debug Mode
 ```bash
+# Opens Playwright Inspector
 npm run test:debug
+
+# Debug specific test
+npx playwright test tests/order.spec.ts --debug
 ```
 
-### UI mode
+### UI Mode
 ```bash
+# Interactive test exploration
 npm run test:ui
 ```
 
-### Playwright Inspector
-Automatically opens when using `--debug` flag.
+### Trace Viewer
+```bash
+# View trace after test execution
+npm run test:trace
+
+# Generate trace
+npx playwright test --trace on
+```
 
 ### VS Code Debugging
-Use the built-in debugger with breakpoints in tests.
+1. Set breakpoints in test files
+2. Run "Debug: Start Debugging" (F5)
+3. Select "Playwright Test"
 
-## 📖 Documentation
+## 🔐 Authentication Deep Dive
+
+### How Storage State Works
+
+1. **Setup Phase** (`auth.setup.ts`):
+   ```typescript
+   setup('authenticate', async ({ page }) => {
+       await page.goto('/login');
+       await page.fill('[name="email"]', 'test@example.com');
+       await page.fill('[name="password"]', 'password');
+       await page.click('button[type="submit"]');
+       
+       // Save cookies, localStorage, sessionStorage
+       await page.context().storageState({ 
+           path: 'playwright/.auth/user.json' 
+       });
+   });
+   ```
+
+2. **Test Phase** (all authenticated tests):
+   ```typescript
+   // Browser context automatically loads saved state
+   use: { storageState: 'playwright/.auth/user.json' }
+   
+   // Tests start already logged in!
+   test('my test', async ({ page }) => {
+       await page.goto('/'); // Already authenticated
+   });
+   ```
+
+3. **Non-Auth Tests**:
+   ```typescript
+   // Reset storage state
+   test.use({ storageState: { cookies: [], origins: [] } });
+   ```
+
+### Troubleshooting Authentication
+
+```bash
+# If auth state is corrupted or expired
+npm run clean:auth
+
+# Then re-run tests (will recreate auth state)
+npm test
+```
+
+## 📖 Additional Resources
 
 - [Playwright Documentation](https://playwright.dev/)
+- [Playwright Authentication Guide](https://playwright.dev/docs/auth)
 - [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+- [Allure Report Documentation](https://docs.qameta.io/allure/)
 - [Page Object Model Pattern](https://playwright.dev/docs/pom)
 
 ## 🤝 Contributing
 
-1. Create a feature branch
-2. Make your changes
-3. Run tests and linting
-4. Submit a pull request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-ISC
+This project is licensed under the ISC License.
 
 ## 👥 Support
 
-For issues and questions, please create an issue in the repository.
+For questions or issues, please open an issue in the repository.
+
+---
+
+**Happy Testing! 🎭**

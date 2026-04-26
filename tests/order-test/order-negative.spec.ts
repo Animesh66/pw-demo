@@ -1,5 +1,5 @@
-import { test, expect } from './base/BaseTest';
-import { Logger, CSVOperations } from '../utils';
+import { test, expect } from '../base/BaseTest';
+import { Logger, CSVOperations } from '../../utils';
 
 /**
  * Order Placement Test Suite - Negative Scenarios
@@ -42,20 +42,12 @@ test.describe('Order Placement Flow - Negative Scenarios', () => {
     });
 
     /**
-     * Before each test hook - Performs login and navigation to home page
+     * Before each test hook - Navigate to home page (already authenticated via storage state)
      */
-    test.beforeEach(async ({ loginPage, homePage }, testInfo) => {
+    test.beforeEach(async ({ homePage }, testInfo) => {
         Logger.testStart(testInfo.title);
-        Logger.step(1, 'Navigate to login page and perform login');
+        Logger.step(1, 'Navigate to home page (authenticated via storage state)');
 
-        await loginPage.navigateToLogin();
-        Logger.info('Navigated to login page');
-
-        Logger.info(`Logging in with user: ${TEST_USER.email}`);
-        await loginPage.login(TEST_USER.email, TEST_USER.password);
-        Logger.success('Login successful');
-
-        Logger.step(2, 'Navigate to home page and verify');
         await homePage.navigateToHome();
         Logger.info('Navigated to home page');
 
@@ -84,16 +76,16 @@ test.describe('Order Placement Flow - Negative Scenarios', () => {
     });
 
     /**
-     * TC02: Order Placement with Invalid Card
+     * TC03: Order Placement with Invalid Card
      */
-    test('TC02 - Order placement fails with invalid card number', { tag: '@order' }, async ({ 
+    test('TC03 - Order placement fails with invalid card number', { tag: '@order' }, async ({ 
         homePage, 
         cartPage, 
         checkoutPage,
         errorPage 
     }) => {
         await test.step('Add product to cart', async () => {
-            Logger.step(3, 'Add product to cart');
+            Logger.step(2, 'Add product to cart');
             await homePage.addFirstProductToCart();
             Logger.success('Product added to cart');
 
@@ -103,7 +95,7 @@ test.describe('Order Placement Flow - Negative Scenarios', () => {
         });
 
         await test.step('Navigate to cart', async () => {
-            Logger.step(4, 'Navigate to cart');
+            Logger.step(3, 'Navigate to cart');
             await homePage.header.clickCart();
             Logger.info('Navigated to cart page');
             expect(await cartPage.isPageLoaded()).toBeTruthy();
@@ -111,7 +103,7 @@ test.describe('Order Placement Flow - Negative Scenarios', () => {
         });
 
         await test.step('Proceed to checkout', async () => {
-            Logger.step(5, 'Proceed to checkout');
+            Logger.step(4, 'Proceed to checkout');
             await cartPage.proceedToCheckout();
             Logger.info('Navigated to checkout page');
             expect(await checkoutPage.isPageLoaded()).toBeTruthy();
@@ -119,7 +111,7 @@ test.describe('Order Placement Flow - Negative Scenarios', () => {
         });
 
         await test.step('Fill payment form with invalid card', async () => {
-            Logger.step(6, 'Fill payment form with INVALID card');
+            Logger.step(5, 'Fill payment form with INVALID card');
             Logger.info(`Card Type: ${invalidCardData.cardType}`);
             Logger.info(`Card Number: ${INVALID_CARD.number}`);
             Logger.warn('Using invalid card for negative testing');
@@ -134,13 +126,13 @@ test.describe('Order Placement Flow - Negative Scenarios', () => {
         });
 
         await test.step('Submit payment with invalid card', async () => {
-            Logger.step(7, 'Submit payment with invalid card');
+            Logger.step(6, 'Submit payment with invalid card');
             await checkoutPage.attemptPayment();
             Logger.info('Payment submitted with invalid card');
         });
 
         await test.step('Verify payment failure', async () => {
-            Logger.step(8, 'Verify payment failure');
+            Logger.step(7, 'Verify payment failure');
 
             const currentUrl = await checkoutPage.getUrl();
             Logger.info(`Current URL: ${currentUrl}`);
@@ -175,14 +167,14 @@ test.describe('Order Placement Flow - Negative Scenarios', () => {
     });
 
     /**
-     * TC03: Validation - Empty Card Number
+     * TC04: Validation - Empty Card Number
      */
-    test('TC03 - Cannot submit payment with empty card number', { tag: '@order' }, async ({ 
+    test('TC04 - Cannot submit payment with empty card number', { tag: '@order' }, async ({ 
         homePage, 
         cartPage, 
         checkoutPage 
     }) => {
-        Logger.step(3, 'Add product and navigate to checkout');
+        Logger.step(2, 'Add product and navigate to checkout');
 
         await homePage.addFirstProductToCart();
         Logger.success('Product added to cart');
@@ -193,14 +185,14 @@ test.describe('Order Placement Flow - Negative Scenarios', () => {
         await cartPage.proceedToCheckout();
         Logger.info('Navigated to checkout');
 
-        Logger.step(4, 'Fill partial payment details (no card number)');
+        Logger.step(3, 'Fill partial payment details (no card number)');
 
         await checkoutPage.fillCardholderName(VALID_CARD.holderName);
         await checkoutPage.fillExpiryDate(VALID_CARD.expiry);
         await checkoutPage.fillCVV(VALID_CARD.cvv);
         Logger.warn('Filled payment form without card number');
 
-        Logger.step(5, 'Attempt to submit payment');
+        Logger.step(4, 'Attempt to submit payment');
 
         const urlBeforeSubmit = await checkoutPage.getUrl();
         Logger.info(`URL before submit: ${urlBeforeSubmit}`);
@@ -210,7 +202,7 @@ test.describe('Order Placement Flow - Negative Scenarios', () => {
         const urlAfterSubmit = await checkoutPage.getUrl();
         Logger.info(`URL after submit: ${urlAfterSubmit}`);
 
-        Logger.step(6, 'Verify form validation prevents submission');
+        Logger.step(5, 'Verify form validation prevents submission');
 
         expect(urlAfterSubmit).toContain('/checkout');
         Logger.success('Form validation working - still on checkout page');

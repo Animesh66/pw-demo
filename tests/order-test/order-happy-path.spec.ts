@@ -1,5 +1,5 @@
-import { test, expect } from './base/BaseTest';
-import { Logger, CSVOperations } from '../utils';
+import { test, expect } from '../base/BaseTest';
+import { Logger, CSVOperations } from '../../utils';
 
 /**
  * Order Placement Test Suite - Happy Path Scenarios
@@ -34,20 +34,12 @@ test.describe('Order Placement Flow - Happy Path', () => {
     });
 
     /**
-     * Before each test hook - Performs login and navigation to home page
+     * Before each test hook - Navigate to home page (already authenticated via storage state)
      */
-    test.beforeEach(async ({ loginPage, homePage }, testInfo) => {
+    test.beforeEach(async ({ homePage }, testInfo) => {
         Logger.testStart(testInfo.title);
-        Logger.step(1, 'Navigate to login page and perform login');
+        Logger.step(1, 'Navigate to home page (authenticated via storage state)');
 
-        await loginPage.navigateToLogin();
-        Logger.info('Navigated to login page');
-
-        Logger.info(`Logging in with user: ${TEST_USER.email}`);
-        await loginPage.login(TEST_USER.email, TEST_USER.password);
-        Logger.success('Login successful');
-
-        Logger.step(2, 'Navigate to home page and verify');
         await homePage.navigateToHome();
         Logger.info('Navigated to home page');
 
@@ -84,7 +76,7 @@ test.describe('Order Placement Flow - Happy Path', () => {
         checkoutPage 
     }) => {
         await test.step('Add product to cart', async () => {
-            Logger.step(3, 'Add product to cart');
+            Logger.step(2, 'Add product to cart');
             await homePage.addFirstProductToCart();
             Logger.success('Product added to cart');
 
@@ -95,7 +87,7 @@ test.describe('Order Placement Flow - Happy Path', () => {
         });
 
         await test.step('Navigate to cart and verify product', async () => {
-            Logger.step(4, 'Navigate to cart and verify');
+            Logger.step(3, 'Navigate to cart and verify');
             await homePage.header.clickCart();
             Logger.info('Navigated to cart page');
 
@@ -113,7 +105,7 @@ test.describe('Order Placement Flow - Happy Path', () => {
         });
 
         await test.step('Proceed to checkout', async () => {
-            Logger.step(5, 'Proceed to checkout');
+            Logger.step(4, 'Proceed to checkout');
             await cartPage.proceedToCheckout();
             Logger.info('Navigated to checkout page');
 
@@ -125,7 +117,7 @@ test.describe('Order Placement Flow - Happy Path', () => {
         });
 
         await test.step('Fill payment form with valid details', async () => {
-            Logger.step(6, 'Fill payment form with valid card details');
+            Logger.step(5, 'Fill payment form with valid card details');
             Logger.info(`Card Type: ${validCardData.cardType}`);
             Logger.info(`Card Number: ${VALID_CARD.number}`);
 
@@ -144,13 +136,13 @@ test.describe('Order Placement Flow - Happy Path', () => {
         });
 
         await test.step('Submit payment', async () => {
-            Logger.step(7, 'Submit payment');
+            Logger.step(6, 'Submit payment');
             await checkoutPage.submitPayment();
             Logger.info('Payment submitted');
         });
 
         await test.step('Verify order placement', async () => {
-            Logger.step(8, 'Verify order placement result');
+            Logger.step(7, 'Verify order placement result');
             const currentUrl = await checkoutPage.getUrl();
             Logger.info(`Current URL: ${currentUrl}`);
 
@@ -160,30 +152,30 @@ test.describe('Order Placement Flow - Happy Path', () => {
     });
 
     /**
-     * TC04: Verify Cart Quantity and Amount Updates
+     * TC02: Verify Cart Quantity and Amount Updates
      */
-    test('TC04 - Verify cart quantity and amount updates', { tag: '@order' }, async ({ 
+    test('TC02 - Verify cart quantity and amount updates', { tag: '@order' }, async ({ 
         homePage, 
         cartPage 
     }) => {
-        Logger.step(3, 'Add product to cart');
+        Logger.step(2, 'Add product to cart');
         await homePage.addFirstProductToCart();
         Logger.success('Product added to cart');
 
-        Logger.step(4, 'Navigate to cart');
+        Logger.step(3, 'Navigate to cart');
         await homePage.header.clickCart();
         Logger.info('Navigated to cart page');
 
-        Logger.step(5, 'Get initial cart total');
+        Logger.step(4, 'Get initial cart total');
         const initialTotal = await cartPage.getTotal();
         const initialValue = parseFloat(initialTotal.replace('$', ''));
         Logger.info(`Initial total: ${initialTotal} (${initialValue})`);
 
-        Logger.step(6, 'Increase product quantity');
+        Logger.step(5, 'Increase product quantity');
         await cartPage.increaseFirstProductQuantity();
         Logger.info('Increased product quantity');
 
-        Logger.step(7, 'Verify total amount increased');
+        Logger.step(6, 'Verify total amount increased');
         const updatedTotal = await cartPage.getTotal();
         const updatedValue = parseFloat(updatedTotal.replace('$', ''));
         Logger.info(`Updated total: ${updatedTotal} (${updatedValue})`);

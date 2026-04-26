@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import { EnvironmentConfig } from './config/environment.config';
+import { AuthConfig } from './config/auth.config';
 
 /**
  * Playwright Test Configuration
@@ -30,6 +31,11 @@ export default defineConfig({
         ['html', { outputFolder: 'playwright-report', open: 'never' }],
         ['list'],
         ['json', { outputFile: 'test-results/test-results.json' }],
+        ['allure-playwright', { 
+            outputFolder: 'allure-results',
+            detail: true,
+            suiteTitle: true 
+        }],
         ...(EnvironmentConfig.IS_CI 
             ? [['junit', { outputFile: 'test-results/junit.xml' }] as const] 
             : []
@@ -77,6 +83,12 @@ export default defineConfig({
 
     /* Configure projects for major browsers */
     projects: [
+        // Setup project - Authenticate once before all tests
+        {
+            name: 'setup',
+            testMatch: /.*\.setup\.ts/,
+        },
+
         {
             name: 'chromium',
             use: { 
@@ -85,7 +97,10 @@ export default defineConfig({
                 launchOptions: {
                     slowMo: EnvironmentConfig.BROWSER.SLOW_MO,
                 },
+                // Use prepared auth state
+                storageState: AuthConfig.STORAGE_STATE_PATH,
             },
+            dependencies: ['setup'],
         },
 
         {
@@ -96,7 +111,10 @@ export default defineConfig({
                 launchOptions: {
                     slowMo: EnvironmentConfig.BROWSER.SLOW_MO,
                 },
+                // Use prepared auth state
+                storageState: AuthConfig.STORAGE_STATE_PATH,
             },
+            dependencies: ['setup'],
         },
 
         {
@@ -107,7 +125,10 @@ export default defineConfig({
                 launchOptions: {
                     slowMo: EnvironmentConfig.BROWSER.SLOW_MO,
                 },
+                // Use prepared auth state
+                storageState: AuthConfig.STORAGE_STATE_PATH,
             },
+            dependencies: ['setup'],
         },
 
         /* Test against mobile viewports */
@@ -118,7 +139,10 @@ export default defineConfig({
                 launchOptions: {
                     slowMo: EnvironmentConfig.BROWSER.SLOW_MO,
                 },
+                // Use prepared auth state
+                storageState: AuthConfig.STORAGE_STATE_PATH,
             },
+            dependencies: ['setup'],
         },
         
         {
@@ -128,13 +152,12 @@ export default defineConfig({
                 launchOptions: {
                     slowMo: EnvironmentConfig.BROWSER.SLOW_MO,
                 },
+                // Use prepared auth state
+                storageState: AuthConfig.STORAGE_STATE_PATH,
             },
+            dependencies: ['setup'],
         },
     ],
-
-    /* Global setup and teardown */
-    // globalSetup: require.resolve('./tests/global-setup.ts'),
-    // globalTeardown: require.resolve('./tests/global-teardown.ts'),
 
     /* Run your local dev server before starting the tests */
     // webServer: {
