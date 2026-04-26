@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: Playwright Tests (Docker)
 
 on:
   push:
@@ -7,8 +7,45 @@ on:
     branches: [ main, develop ]
   workflow_dispatch:
 
+env:
+  DOCKER_IMAGE: pw-demo-tests
+  DOCKER_TAG: ${{ github.sha }}
+
 jobs:
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }},${{ env.DOCKER_IMAGE }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        load: true
+
+    - name: Save Docker image
+      run: docker save ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} | gzip > docker-image.tar.gz
+
+    - name: Upload Docker image artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: docker-image
+        path: docker-image.tar.gz
+        retention-days: 1
+
   test:
+    name: Run Tests - ${{ matrix.browser }}
+    needs: build
     timeout-minutes: 60
     runs-on: ubuntu-latest
     strategy:
@@ -20,17 +57,13 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - name: Download Docker image artifact
+      uses: actions/download-artifact@v4
       with:
-        node-version: '18'
-        cache: 'npm'
+        name: docker-image
 
-    - name: Install dependencies
-      run: npm ci
-
-    - name: Install Playwright Browsers
-      run: npm run ci:install
+    - name: Load Docker image
+      run: docker load < docker-image.tar.gz
 
     - name: Create .env file
       run: |
@@ -38,16 +71,18 @@ jobs:
         echo "NODE_ENV=ci" >> .env
         echo "CI=true" >> .env
 
-    - name: Run linting
-      run: npm run lint
-
-    - name: Run type checking
-      run: npm run type-check
-
-    - name: Run Playwright tests
-      run: npx playwright test --project=${{ matrix.browser }}
-      env:
-        CI: true
+    - name: Run Playwright tests in Docker
+      run: |
+        docker run --rm \
+          -v $(pwd)/test-results:/app/test-results \
+          -v $(pwd)/playwright-report:/app/playwright-report \
+          -v $(pwd)/allure-results:/app/allure-results \
+          -v $(pwd)/logs:/app/logs \
+          -e CI=true \
+          -e BASE_URL=http://localhost:5173 \
+          -e NODE_ENV=ci \
+          ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} \
+          npx playwright test --project=${{ matrix.browser }}
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
@@ -63,6 +98,14 @@ jobs:
       with:
         name: test-results-${{ matrix.browser }}
         path: test-results/
+        retention-days: 30
+
+    - name: Upload allure results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-results-${{ matrix.browser }}
+        path: allure-results/
         retention-days: 30
 
     - name: Upload logs
