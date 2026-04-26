@@ -1,0 +1,5 @@
+testCaseId,testName,productIndex,cardType,expectedResult,description
+TC01,Positive order with valid VISA,0,validVisa,success,Place order successfully with valid VISA card
+TC02,Negative order with invalid card,0,invalidCard,failure,Order placement fails with invalid card number
+TC03,Positive order with Mastercard,1,validMastercard,success,Place order successfully with Mastercard
+TC04,Negative order with expired card,0,expiredCard,failure,Order placement fails with expired card

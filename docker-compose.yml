@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  playwright-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pw-demo-tests:latest
+    container_name: playwright-test-runner
+    environment:
+      - NODE_ENV=ci
+      - CI=true
+      - BASE_URL=${BASE_URL:-http://localhost:5173}
+    volumes:
+      # Mount test results for local access
+      - ./test-results:/app/test-results
+      - ./playwright-report:/app/playwright-report
+      - ./allure-results:/app/allure-results
+      - ./logs:/app/logs
+    command: npm run ci:test
+    
+  # Service for running specific test suites
+  playwright-smoke:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pw-demo-tests:latest
+    container_name: playwright-smoke-tests
+    environment:
+      - NODE_ENV=ci
+      - CI=true
+      - BASE_URL=${BASE_URL:-http://localhost:5173}
+    volumes:
+      - ./test-results:/app/test-results
+      - ./playwright-report:/app/playwright-report
+      - ./allure-results:/app/allure-results
+      - ./logs:/app/logs
+    command: npm run test:smoke
+    profiles:
+      - smoke
+      
+  # Service for running regression tests
+  playwright-regression:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pw-demo-tests:latest
+    container_name: playwright-regression-tests
+    environment:
+      - NODE_ENV=ci
+      - CI=true
+      - BASE_URL=${BASE_URL:-http://localhost:5173}
+    volumes:
+      - ./test-results:/app/test-results
+      - ./playwright-report:/app/playwright-report
+      - ./allure-results:/app/allure-results
+      - ./logs:/app/logs
+    command: npm run test:regression
+    profiles:
+      - regression

@@ -1,0 +1,7 @@
+cardType,cardNumber,holderName,expiryDate,cvv,isValid,description
+validVisa,4111111111111111,Test User,12/28,123,true,Valid VISA test card
+validMastercard,5555555555554444,Test User,12/28,123,true,Valid Mastercard test card
+validAmex,378282246310005,Test User,12/28,1234,true,Valid American Express card
+invalidCard,1234567890123456,Test User,12/28,123,false,Invalid card number for negative testing
+expiredCard,4111111111111111,Test User,01/20,123,false,Expired card for negative testing
+invalidCVV,4111111111111111,Test User,12/28,99,false,Card with invalid CVV

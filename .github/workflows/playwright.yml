@@ -1,0 +1,136 @@
+name: Playwright Tests (Docker)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  DOCKER_IMAGE: pw-demo-tests
+  DOCKER_TAG: ${{ github.sha }}
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }},${{ env.DOCKER_IMAGE }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        load: true
+
+    - name: Save Docker image
+      run: docker save ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} | gzip > docker-image.tar.gz
+
+    - name: Upload Docker image artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: docker-image
+        path: docker-image.tar.gz
+        retention-days: 1
+
+  test:
+    name: Run Tests - ${{ matrix.browser }}
+    needs: build
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download Docker image artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: docker-image
+
+    - name: Load Docker image
+      run: docker load < docker-image.tar.gz
+
+    - name: Create .env file
+      run: |
+        echo "BASE_URL=http://localhost:5173" >> .env
+        echo "NODE_ENV=ci" >> .env
+        echo "CI=true" >> .env
+
+    - name: Run Playwright tests in Docker
+      run: |
+        docker run --rm \
+          -v $(pwd)/test-results:/app/test-results \
+          -v $(pwd)/playwright-report:/app/playwright-report \
+          -v $(pwd)/allure-results:/app/allure-results \
+          -v $(pwd)/logs:/app/logs \
+          -e CI=true \
+          -e BASE_URL=http://localhost:5173 \
+          -e NODE_ENV=ci \
+          ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} \
+          npx playwright test --project=${{ matrix.browser }}
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report-${{ matrix.browser }}
+        path: playwright-report/
+        retention-days: 30
+
+    - name: Upload test artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ matrix.browser }}
+        path: test-results/
+        retention-days: 30
+
+    - name: Upload allure results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-results-${{ matrix.browser }}
+        path: allure-results/
+        retention-days: 30
+
+    - name: Upload logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: logs-${{ matrix.browser }}
+        path: logs/
+        retention-days: 30
+
+  report:
+    name: Publish Test Report
+    needs: test
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Publish Test Report
+      uses: mikepenz/action-junit-report@v4
+      if: always()
+      with:
+        report_paths: '**/test-results/junit.xml'
+        check_name: Test Report
+        detailed_summary: true
+        include_passed: true

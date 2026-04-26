@@ -1,0 +1,50 @@
+[2026-04-26T09:32:07.429Z] [INFO   ] Reading CSV file: /Users/animeshmukherjee/Desktop/Codebase/pw-demo/data/csv/users.csv
+[2026-04-26T09:32:07.431Z] [DEBUG  ] CSV Headers: testName, email, password, description
+[2026-04-26T09:32:07.467Z] [SUCCESS] Successfully read 2 rows from CSV file
+[2026-04-26T09:32:07.486Z] [INFO   ] Reading row 0 from CSV file
+[2026-04-26T09:32:07.486Z] [INFO   ] Reading CSV file: /Users/animeshmukherjee/Desktop/Codebase/pw-demo/data/csv/payment-cards.csv
+[2026-04-26T09:32:07.487Z] [DEBUG  ] CSV Headers: cardType, cardNumber, holderName, expiryDate, cvv, isValid, description
+[2026-04-26T09:32:07.487Z] [SUCCESS] Successfully read 6 rows from CSV file
+[2026-04-26T09:32:07.487Z] [INFO   ] Filtered CSV data: Found 3 matching rows for isValid=true
+[2026-04-26T09:32:07.488Z] [INFO   ] Reading CSV file: /Users/animeshmukherjee/Desktop/Codebase/pw-demo/data/csv/payment-cards.csv
+[2026-04-26T09:32:07.488Z] [DEBUG  ] CSV Headers: cardType, cardNumber, holderName, expiryDate, cvv, isValid, description
+[2026-04-26T09:32:07.489Z] [SUCCESS] Successfully read 6 rows from CSV file
+[2026-04-26T09:32:07.489Z] [INFO   ] Filtered CSV data: Found 3 matching rows for isValid=false
+
+================================================================================
+Test Execution Started: 4/26/2026, 7:32:07 PM
+================================================================================
+
+[2026-04-26T09:32:08.419Z] [INFO   ] === Order Placement Test Suite Started ===
+[2026-04-26T09:32:08.419Z] [INFO   ] Test User: test.user@email.com
+[2026-04-26T09:32:08.419Z] [INFO   ] Valid Card Type: validVisa
+[2026-04-26T09:32:08.419Z] [INFO   ] Invalid Card Type: invalidCard
+
+================================================================================
+TEST STARTED: TC04 - Verify cart quantity and amount updates
+Time: 4/26/2026, 7:32:20 PM
+================================================================================
+
+
+------------------------------------------------------------
+STEP: Step 1: Navigate to login page and perform login
+------------------------------------------------------------
+[2026-04-26T09:32:22.535Z] [INFO   ] Navigated to login page
+[2026-04-26T09:32:22.576Z] [INFO   ] Logging in with user: test.user@email.com
+[2026-04-26T09:32:25.718Z] [SUCCESS] Login successful
+
+------------------------------------------------------------
+STEP: Step 2: Navigate to home page and verify
+------------------------------------------------------------
+[2026-04-26T09:32:26.587Z] [INFO   ] Navigated to home page
+[2026-04-26T09:32:26.940Z] [SUCCESS] Home page loaded successfully
+[2026-04-26T09:32:27.540Z] [ERROR  ] Test failed: TC04 - Verify cart quantity and amount updates
+[2026-04-26T09:32:27.988Z] [INFO   ] Failure screenshot captured
+
+================================================================================
+TEST FAILED: TC04 - Verify cart quantity and amount updates
+Time: 4/26/2026, 7:32:27 PM
+================================================================================
+
+[2026-04-26T09:32:28.285Z] [INFO   ] === Order Placement Test Suite Completed ===
+[2026-04-26T09:32:28.286Z] [INFO   ] Log file saved at: /Users/animeshmukherjee/Desktop/Codebase/pw-demo/logs/test-execution-2026-04-26_19-32-07.log

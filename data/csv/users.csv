@@ -1,0 +1,3 @@
+testName,email,password,description
+validUser,test.user@email.com,test1234,Valid test user for order placement
+invalidUser,invalid@email.com,wrongpass,Invalid user for negative testing
