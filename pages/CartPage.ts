@@ -39,10 +39,14 @@ export class CartPage extends BasePage {
         this.quantityIncrementButtons = page.locator('button').filter({ hasText: /^[+\+]$/ });
         this.quantityDisplays = page.locator('div').filter({ hasText: /^\d+$/ });
         this.removeButtons = page.getByRole('button', { name: 'Remove' });
-        this.subtotalAmount = page.locator('div').filter({ hasText: /Subtotal/ }).locator('div').last();
-        this.shippingAmount = page.locator('div').filter({ hasText: /Shipping/ }).locator('div').last();
-        this.taxAmount = page.locator('div').filter({ hasText: /Tax/ }).locator('div').last();
-        this.totalAmount = page.locator('div').filter({ hasText: /Total/ }).locator('div').last();
+        
+        // Order summary locators - use Order Summary heading as anchor
+        const orderSummary = page.locator('div:has(h3:has-text("Order Summary"))');
+        this.subtotalAmount = orderSummary.getByText(/Subtotal/).locator('xpath=following-sibling::*[1]');
+        this.shippingAmount = orderSummary.getByText(/Shipping/).locator('xpath=following-sibling::*[1]');
+        this.taxAmount = orderSummary.getByText(/Tax/).locator('xpath=following-sibling::*[1]');
+        this.totalAmount = orderSummary.getByText(/Total/).locator('xpath=following-sibling::*[1]');
+        
         this.proceedToCheckoutButton = page.getByRole('button', { name: 'Proceed to Checkout' });
     }
 
@@ -51,7 +55,6 @@ export class CartPage extends BasePage {
      */
     async navigateToCart(): Promise<void> {
         await this.goto('http://localhost:5173/cart');
-        await this.page.waitForLoadState('networkidle');
     }
 
     /**
@@ -59,7 +62,6 @@ export class CartPage extends BasePage {
      */
     async increaseFirstProductQuantity(): Promise<void> {
         await this.quantityIncrementButtons.first().click();
-        await this.page.waitForTimeout(500);
     }
 
     /**
@@ -67,7 +69,6 @@ export class CartPage extends BasePage {
      */
     async decreaseFirstProductQuantity(): Promise<void> {
         await this.quantityDecrementButtons.first().click();
-        await this.page.waitForTimeout(500);
     }
 
     /**
@@ -75,7 +76,7 @@ export class CartPage extends BasePage {
      */
     async removeFirstProduct(): Promise<void> {
         await this.removeButtons.first().click();
-        await this.page.waitForTimeout(500);
+        // Wait for DOM to update after removal
     }
 
     /**
@@ -127,7 +128,6 @@ export class CartPage extends BasePage {
      */
     async proceedToCheckout(): Promise<void> {
         await this.proceedToCheckoutButton.click();
-        await this.page.waitForLoadState('networkidle');
     }
 
     /**

@@ -62,7 +62,6 @@ export class HeaderComponent {
      */
     async clickHome(): Promise<void> {
         await this.homeLink.click();
-        await this.page.waitForLoadState('networkidle');
     }
 
     /**
@@ -70,7 +69,6 @@ export class HeaderComponent {
      */
     async clickCart(): Promise<void> {
         await this.cartLink.click();
-        await this.page.waitForLoadState('networkidle');
     }
 
     /**
@@ -78,7 +76,6 @@ export class HeaderComponent {
      */
     async clickMyAccount(): Promise<void> {
         await this.myAccountLink.click();
-        await this.page.waitForLoadState('networkidle');
     }
 
     /**
@@ -99,7 +96,12 @@ export class HeaderComponent {
      * Check if user is logged in
      */
     async isUserLoggedIn(): Promise<boolean> {
-        return await this.logoutButton.isVisible();
+        try {
+            await this.logoutButton.waitFor({ state: 'visible', timeout: 10000 });
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     /**

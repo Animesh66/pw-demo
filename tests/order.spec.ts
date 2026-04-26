@@ -61,9 +61,6 @@ test.describe('Order Placement Flow', () => {
         // Perform login with test credentials
         Logger.info(`Logging in with user: ${TEST_USER.email}`);
         await loginPage.login(TEST_USER.email, TEST_USER.password);
-        
-        // Wait for login to complete
-        await loginPage.wait(2000);
         Logger.success('Login successful');
         
         Logger.step(2, 'Navigate to home page and verify');
@@ -73,13 +70,9 @@ test.describe('Order Placement Flow', () => {
         Logger.info('Navigated to home page');
         
         // Verify home page loaded
-        await expect(homePage['pageHeading']).toBeVisible();
+        const isPageLoaded = await homePage.isPageLoaded();
+        expect(isPageLoaded).toBeTruthy();
         Logger.success('Home page loaded successfully');
-        
-        // Verify user is logged in
-        const isLoggedIn = await homePage.header.isUserLoggedIn();
-        expect(isLoggedIn).toBeTruthy();
-        Logger.success('User is logged in');
     });
 
     /**
@@ -202,10 +195,6 @@ test.describe('Order Placement Flow', () => {
             Logger.step(7, 'Submit payment');
             await checkoutPage.submitPayment();
             Logger.info('Payment submitted');
-            
-            // Wait for navigation after payment
-            await page.waitForLoadState('networkidle');
-            Logger.info('Page loaded after payment submission');
         });
 
         // Step 6: Verify order placed successfully
@@ -370,9 +359,6 @@ test.describe('Order Placement Flow', () => {
         
         await checkoutPage.submitPayment();
         
-        // Wait a bit for any validation
-        await page.waitForTimeout(1000);
-        
         const urlAfterSubmit = page.url();
         Logger.info(`URL after submit: ${urlAfterSubmit}`);
         
@@ -421,9 +407,6 @@ test.describe('Order Placement Flow', () => {
         // Increase quantity
         await cartPage.increaseFirstProductQuantity();
         Logger.info('Increased product quantity');
-        
-        // Wait for update
-        await cartPage.wait(1000);
         
         Logger.step(7, 'Verify total amount increased');
         

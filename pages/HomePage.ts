@@ -31,7 +31,6 @@ export class HomePage extends BasePage {
      */
     async navigateToHome(): Promise<void> {
         await this.goto('http://localhost:5173/');
-        await this.page.waitForLoadState('networkidle');
     }
 
     /**
@@ -39,7 +38,8 @@ export class HomePage extends BasePage {
      */
     async addFirstProductToCart(): Promise<void> {
         await this.addToCartButtons.first().click();
-        await this.page.waitForTimeout(1000); // Wait for cart update
+        // Wait for toast notification to appear
+        await this.page.locator('text=/added to cart/i').waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
     }
 
     /**
@@ -47,7 +47,8 @@ export class HomePage extends BasePage {
      */
     async addProductToCartByIndex(index: number): Promise<void> {
         await this.addToCartButtons.nth(index).click();
-        await this.page.waitForTimeout(1000); // Wait for cart update
+        // Wait for toast notification to appear
+        await this.page.locator('text=/added to cart/i').waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
     }
 
     /**
@@ -56,7 +57,8 @@ export class HomePage extends BasePage {
     async addProductToCartByName(productName: string): Promise<void> {
         const productCard = this.page.locator(`a:has-text("${productName}")`).first();
         await productCard.locator('button', { hasText: '+ Add to Cart' }).click();
-        await this.page.waitForTimeout(1000);
+        // Wait for toast notification to appear
+        await this.page.locator('text=/added to cart/i').waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
     }
 
     /**

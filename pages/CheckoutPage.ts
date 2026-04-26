@@ -43,7 +43,6 @@ export class CheckoutPage extends BasePage {
      */
     async navigateToCheckout(): Promise<void> {
         await this.goto('http://localhost:5173/checkout');
-        await this.page.waitForLoadState('networkidle');
     }
 
     /**
@@ -94,7 +93,6 @@ export class CheckoutPage extends BasePage {
      */
     async submitPayment(): Promise<void> {
         await this.payButton.click();
-        await this.page.waitForTimeout(2000); // Wait for payment processing
     }
 
     /**

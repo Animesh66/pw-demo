@@ -33,20 +33,6 @@ export class BasePage {
     }
 
     /**
-     * Wait for specific time (use sparingly, prefer waitForSelector)
-     */
-    async wait(milliseconds: number): Promise<void> {
-        await this.page.waitForTimeout(milliseconds);
-    }
-
-    /**
-     * Wait for page navigation
-     */
-    async waitForNavigation(): Promise<void> {
-        await this.page.waitForLoadState('networkidle');
-    }
-
-    /**
      * Take screenshot
      */
     async screenshot(path: string): Promise<void> {

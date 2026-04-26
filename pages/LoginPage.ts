@@ -35,7 +35,6 @@ export class LoginPage extends BasePage {
      */
     async navigateToLogin(): Promise<void> {
         await this.goto('http://localhost:5173/login');
-        await this.page.waitForLoadState('networkidle');
     }
 
     /**
@@ -57,7 +56,6 @@ export class LoginPage extends BasePage {
      */
     async clickSignIn(): Promise<void> {
         await this.signInButton.click();
-        await this.page.waitForLoadState('networkidle');
     }
 
     /**
