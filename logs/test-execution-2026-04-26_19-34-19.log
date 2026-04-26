@@ -1,0 +1,12 @@
+[2026-04-26T09:34:19.030Z] [INFO   ] Reading CSV file: /Users/animeshmukherjee/Desktop/Codebase/pw-demo/data/csv/users.csv
+[2026-04-26T09:34:19.033Z] [DEBUG  ] CSV Headers: testName, email, password, description
+[2026-04-26T09:34:19.033Z] [SUCCESS] Successfully read 2 rows from CSV file
+[2026-04-26T09:34:19.034Z] [INFO   ] Reading row 0 from CSV file
+[2026-04-26T09:34:19.034Z] [INFO   ] Reading CSV file: /Users/animeshmukherjee/Desktop/Codebase/pw-demo/data/csv/payment-cards.csv
+[2026-04-26T09:34:19.043Z] [DEBUG  ] CSV Headers: cardType, cardNumber, holderName, expiryDate, cvv, isValid, description
+[2026-04-26T09:34:19.044Z] [SUCCESS] Successfully read 6 rows from CSV file
+[2026-04-26T09:34:19.044Z] [INFO   ] Filtered CSV data: Found 3 matching rows for isValid=true
+[2026-04-26T09:34:19.044Z] [INFO   ] Reading CSV file: /Users/animeshmukherjee/Desktop/Codebase/pw-demo/data/csv/payment-cards.csv
+[2026-04-26T09:34:19.045Z] [DEBUG  ] CSV Headers: cardType, cardNumber, holderName, expiryDate, cvv, isValid, description
+[2026-04-26T09:34:19.045Z] [SUCCESS] Successfully read 6 rows from CSV file
+[2026-04-26T09:34:19.045Z] [INFO   ] Filtered CSV data: Found 3 matching rows for isValid=false
