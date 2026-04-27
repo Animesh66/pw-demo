@@ -45,7 +45,7 @@ jobs:
         node-version: '24'
         cache: 'npm'
 
-    - name: Clone and install demo application
+    - name: Clone and setup demo application
       run: |
         echo "📦 Cloning demo application..."
         git clone https://github.com/Animesh66/demo-front-end.git demo-app
@@ -58,48 +58,23 @@ jobs:
         
         echo "✅ Demo application ready"
 
-    - name: Start backend service
+    - name: Start services and run tests in single process group
       run: |
+        # Start backend in background
         cd demo-app/server
-        echo "🚀 Starting backend server..."
-        PORT=3000 MONGODB_URI=mongodb://localhost:27017/demo-app NODE_ENV=development JWT_SECRET=test-secret setsid npm start </dev/null >../../backend.log 2>&1 &
+        PORT=3000 MONGODB_URI=mongodb://localhost:27017/demo-app NODE_ENV=development JWT_SECRET=test-secret npm start >../../backend.log 2>&1 &
         BACKEND_PID=$!
-        echo $BACKEND_PID > ../../backend.pid
         cd ../..
         echo "Backend started with PID: $BACKEND_PID"
-        sleep 3
         
-        # Verify process is running
-        if ps -p $BACKEND_PID > /dev/null 2>&1; then
-          echo "✅ Backend process confirmed running"
-        else
-          echo "❌ Backend process not found"
-          cat backend.log
-          exit 1
-        fi
-
-    - name: Start frontend service
-      run: |
+        # Start frontend in background
         cd demo-app/client
-        echo "🚀 Starting frontend server..."
-        VITE_API_URL=http://localhost:3000 setsid npm run dev -- --host 0.0.0.0 --port 5173 </dev/null >../../frontend.log 2>&1 &
+        VITE_API_URL=http://localhost:3000 npm run dev -- --host 0.0.0.0 --port 5173 >../../frontend.log 2>&1 &
         FRONTEND_PID=$!
-        echo $FRONTEND_PID > ../../frontend.pid
         cd ../..
         echo "Frontend started with PID: $FRONTEND_PID"
-        sleep 3
         
-        # Verify process is running
-        if ps -p $FRONTEND_PID > /dev/null 2>&1; then
-          echo "✅ Frontend process confirmed running"
-        else
-          echo "❌ Frontend process not found"
-          cat frontend.log
-          exit 1
-        fi
-
-    - name: Wait for services to be ready
-      run: |
+        # Wait for backend
         echo "⏳ Waiting for backend API..."
         for i in {1..60}; do
           if curl -sf http://localhost:3000/api/products > /dev/null 2>&1; then
@@ -109,11 +84,13 @@ jobs:
           if [ $i -eq 60 ]; then
             echo "❌ Backend failed to respond"
             cat backend.log
+            kill $BACKEND_PID $FRONTEND_PID 2>/dev/null || true
             exit 1
           fi
           sleep 2
         done
         
+        # Wait for frontend
         echo "⏳ Waiting for frontend..."
         for i in {1..60}; do
           if curl -sf http://localhost:5173 > /dev/null 2>&1; then
@@ -123,53 +100,34 @@ jobs:
           if [ $i -eq 60 ]; then
             echo "❌ Frontend failed to respond"
             cat frontend.log
+            kill $BACKEND_PID $FRONTEND_PID 2>/dev/null || true
             exit 1
           fi
           sleep 2
         done
         
         echo "✅ All services ready"
+        
+        # Install test dependencies and run tests in same process group
+        npm ci
+        npx playwright install --with-deps ${{ matrix.browser }}
+        
+        # Run tests
+        npx playwright test --project=${{ matrix.browser }} --grep="@${{ inputs.test-suite }}" || TEST_EXIT=$?
+        
+        # Cleanup services
+        echo "🧹 Stopping services..."
+        kill $BACKEND_PID $FRONTEND_PID 2>/dev/null || true
+        
+        # Exit with test result
+        exit ${TEST_EXIT:-0}
+      env:
+        BASE_URL: http://localhost:5173
+        CI: true
 
     - name: Install test dependencies
       run: npm ci
 
-    - name: Install Playwright browsers
-      run: npx playwright install --with-deps ${{ matrix.browser }}
-
-    - name: Verify services before tests
-      run: |
-        BACKEND_PID=$(cat backend.pid)
-        FRONTEND_PID=$(cat frontend.pid)
-        
-        echo "🔍 Verifying backend PID $BACKEND_PID..."
-        if ps -p $BACKEND_PID > /dev/null 2>&1; then
-          echo "✅ Backend still running"
-        else
-          echo "❌ Backend died!"
-          tail -100 backend.log
-          exit 1
-        fi
-        
-        echo "🔍 Verifying frontend PID $FRONTEND_PID..."
-        if ps -p $FRONTEND_PID > /dev/null 2>&1; then
-          echo "✅ Frontend still running"
-        else
-          echo "❌ Frontend died!"
-          tail -100 frontend.log
-          exit 1
-        fi
-        
-        # Health checks
-        curl -f http://localhost:3000/api/products || { echo "Backend not responding"; exit 1; }
-        curl -f http://localhost:5173 || { echo "Frontend not responding"; exit 1; }
-        
-        echo "✅ All services verified and healthy"
-
-    - name: Run ${{ inputs.test-suite }} Tests
-      run: npx playwright test --project=${{ matrix.browser }} --grep="@${{ inputs.test-suite }}"
-      env:
-        BASE_URL: http://localhost:5173
-        CI: true
 
     - name: Upload Playwright HTML Report
       uses: actions/upload-artifact@v4
@@ -203,21 +161,7 @@ jobs:
         path: |
           backend.log
           frontend.log
+          logs/
         retention-days: 30
 
-    - name: Cleanup services
-      if: always()
-      run: |
-        echo "🧹 Stopping services..."
-        if [ -f backend.pid ]; then
-          BACKEND_PID=$(cat backend.pid)
-          kill $BACKEND_PID 2>/dev/null && echo "✅ Backend (PID $BACKEND_PID) stopped" || echo "⚠️ Backend already stopped"
-        fi
-        
-        if [ -f frontend.pid ]; then
-          FRONTEND_PID=$(cat frontend.pid)
-          kill $FRONTEND_PID 2>/dev/null && echo "✅ Frontend (PID $FRONTEND_PID) stopped" || echo "⚠️ Frontend already stopped"
-        fi
-        
-        echo "✅ Cleanup complete"
 
