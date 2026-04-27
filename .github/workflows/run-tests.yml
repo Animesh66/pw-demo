@@ -48,12 +48,18 @@ jobs:
     - name: Clone and start demo application
       run: |
         git clone https://github.com/Animesh66/demo-front-end.git demo-app
-        cd demo-app
+        
+        # Install and start backend
+        cd demo-app/server
         npm install
-        PORT=3000 MONGODB_URI=mongodb://localhost:27017/demo-app NODE_ENV=development JWT_SECRET=test-secret nohup npm start > backend.log 2>&1 &
-        echo $! > backend.pid
-        VITE_API_URL=http://localhost:3000 nohup npm run dev > frontend.log 2>&1 &
-        echo $! > frontend.pid
+        PORT=3000 MONGODB_URI=mongodb://localhost:27017/demo-app NODE_ENV=development JWT_SECRET=test-secret nohup npm start > ../../backend.log 2>&1 &
+        echo $! > ../../backend.pid
+        
+        # Install and start frontend
+        cd ../client
+        npm install
+        VITE_API_URL=http://localhost:3000 nohup npm run dev -- --host 0.0.0.0 --port 5173 > ../../frontend.log 2>&1 &
+        echo $! > ../../frontend.pid
 
     - name: Wait for services
       run: |
@@ -123,15 +129,15 @@ jobs:
       if: failure()
       run: |
         echo "📋 Backend logs:"
-        cat demo-app/backend.log || echo "No backend logs"
+        cat backend.log || echo "No backend logs"
         echo ""
         echo "📋 Frontend logs:"
-        cat demo-app/frontend.log || echo "No frontend logs"
+        cat frontend.log || echo "No frontend logs"
 
     - name: Cleanup services
       if: always()
       run: |
         echo "🧹 Terminating web services only (preserving all artifacts)..."
-        [ -f demo-app/backend.pid ] && kill $(cat demo-app/backend.pid) && echo "✅ Backend terminated" || echo "⚠️ Backend already stopped"
-        [ -f demo-app/frontend.pid ] && kill $(cat demo-app/frontend.pid) && echo "✅ Frontend terminated" || echo "⚠️ Frontend already stopped"
+        [ -f backend.pid ] && kill $(cat backend.pid) && echo "✅ Backend terminated" || echo "⚠️ Backend already stopped"
+        [ -f frontend.pid ] && kill $(cat frontend.pid) && echo "✅ Frontend terminated" || echo "⚠️ Frontend already stopped"
         echo "✅ Service cleanup complete - All test artifacts preserved"
