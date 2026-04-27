@@ -35,12 +35,14 @@ jobs:
 
     - name: Start MongoDB, Backend, and Frontend services
       run: |
+        cd demo-app
         docker compose up -d mongodb backend frontend
         echo "⏳ Waiting for services to be healthy..."
         sleep 45
 
     - name: Verify services are running
       run: |
+        cd demo-app
         echo "🔍 Checking MongoDB..."
         docker compose ps mongodb
         echo ""
@@ -107,6 +109,7 @@ jobs:
     - name: Show service logs on failure
       if: failure()
       run: |
+        cd demo-app
         echo "📋 MongoDB logs:"
         docker compose logs mongodb
         echo ""
@@ -118,7 +121,9 @@ jobs:
 
     - name: Cleanup services
       if: always()
-      run: docker compose down -v
+      run: |
+        cd demo-app
+        docker compose down -v
 
   test-registration:
     name: Registration Tests - ${{ matrix.browser }}
@@ -144,12 +149,14 @@ jobs:
 
     - name: Start MongoDB, Backend, and Frontend services
       run: |
+        cd demo-app
         docker compose up -d mongodb backend frontend
         echo "⏳ Waiting for services to be healthy..."
         sleep 45
 
     - name: Verify services are running
       run: |
+        cd demo-app
         echo "🔍 Checking MongoDB..."
         docker compose ps mongodb
         echo ""
@@ -216,6 +223,7 @@ jobs:
     - name: Show service logs on failure
       if: failure()
       run: |
+        cd demo-app
         echo "📋 MongoDB logs:"
         docker compose logs mongodb
         echo ""
@@ -227,7 +235,9 @@ jobs:
 
     - name: Cleanup services
       if: always()
-      run: docker compose down -v
+      run: |
+        cd demo-app
+        docker compose down -v
 
   report:
     name: Publish Test Report
