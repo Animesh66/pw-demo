@@ -45,183 +45,108 @@ jobs:
         node-version: '24'
         cache: 'npm'
 
-    - name: Clone and start demo application
-      run: |
-        git clone https://github.com/Animesh66/demo-front-end.git demo-app
-        
-        # Get absolute path
-        WORK_DIR=$(pwd)
-        echo "Working directory: ${WORK_DIR}"
-        
-        # Install and start backend
-        echo "📦 Installing backend dependencies..."
-        cd demo-app/server
-        npm install
-        
-        echo "🚀 Starting backend server..."
-        nohup npm start > "${WORK_DIR}/backend.log" 2>&1 &
-        BACKEND_PID=$!
-        echo $BACKEND_PID > "${WORK_DIR}/backend.pid"
-        echo "Backend started with PID: $BACKEND_PID"
-        sleep 2
-        
-        # Verify backend process
-        if ps -p $BACKEND_PID > /dev/null; then
-          echo "✅ Backend process $BACKEND_PID is running"
-        else
-          echo "❌ Backend process $BACKEND_PID died immediately"
-          cat "${WORK_DIR}/backend.log"
-          exit 1
-        fi
-        
-        cd "${WORK_DIR}"
-        
-        # Install and start frontend
-        echo "📦 Installing frontend dependencies..."
-        cd demo-app/client
-        npm install
-        
-        echo "🚀 Starting frontend server..."
-        nohup npm run dev -- --host 0.0.0.0 --port 5173 > "${WORK_DIR}/frontend.log" 2>&1 &
-        FRONTEND_PID=$!
-        echo $FRONTEND_PID > "${WORK_DIR}/frontend.pid"
-        echo "Frontend started with PID: $FRONTEND_PID"
-        sleep 2
-        
-        # Verify frontend process
-        if ps -p $FRONTEND_PID > /dev/null; then
-          echo "✅ Frontend process $FRONTEND_PID is running"
-        else
-          echo "❌ Frontend process $FRONTEND_PID died immediately"
-          cat "${WORK_DIR}/frontend.log"
-          exit 1
-        fi
-        
-        cd "${WORK_DIR}"
-        
-        echo "✅ Both services started successfully"
-        echo "Backend PID: $(cat backend.pid)"
-        echo "Frontend PID: $(cat frontend.pid)"
-      env:
-        PORT: 3000
-        MONGODB_URI: mongodb://localhost:27017/demo-app
-        NODE_ENV: development
-        JWT_SECRET: test-secret
-        VITE_API_URL: http://localhost:3000
-
-    - name: Wait for services
-      run: |
-        echo "⏳ Waiting for Backend..."
-        for i in {1..40}; do
-          if curl -sf http://localhost:3000/api/products > /dev/null 2>&1; then
-            echo "✅ Backend ready"
-            break
-          fi
-          echo "  Attempt $i/40..."
-          sleep 3
-        done
-        
-        echo "⏳ Waiting for Frontend..."
-        for i in {1..40}; do
-          if curl -sf http://localhost:5173 > /dev/null 2>&1; then
-            echo "✅ Frontend ready"
-            break
-          fi
-          echo "  Attempt $i/40..."
-          sleep 3
-        done
-        
-        # Verify login page is accessible (important for auth setup)
-        echo "⏳ Verifying login page..."
-        for i in {1..20}; do
-          if curl -sf http://localhost:5173/login > /dev/null 2>&1; then
-            echo "✅ Login page accessible"
-            break
-          fi
-          echo "  Attempt $i/20..."
-          sleep 2
-        done
-        
-        # Give services extra time to stabilize
-        echo "⏳ Allowing services to stabilize..."
-        sleep 10
-        
-        echo "✅ All services ready for testing"
-
     - name: Install test dependencies
       run: npm ci
 
     - name: Install Playwright browsers
       run: npx playwright install --with-deps ${{ matrix.browser }}
 
-    - name: Verify services before test execution
+    - name: Start services and run tests
       run: |
-        echo "🔍 Verifying services are still running..."
+        # Clone demo application
+        echo "📦 Cloning demo application..."
+        git clone https://github.com/Animesh66/demo-front-end.git demo-app
         
-        BACKEND_PID=$(cat backend.pid)
-        FRONTEND_PID=$(cat frontend.pid)
+        # Install backend
+        echo "📦 Installing backend dependencies..."
+        cd demo-app/server
+        npm install
+        cd ../..
         
-        echo "Checking backend PID: $BACKEND_PID"
-        if ps -p $BACKEND_PID > /dev/null; then
-          echo "✅ Backend process $BACKEND_PID is running"
-        else
-          echo "❌ Backend process $BACKEND_PID died!"
-          echo "Last 50 lines of backend logs:"
-          tail -50 backend.log
+        # Install frontend
+        echo "📦 Installing frontend dependencies..."
+        cd demo-app/client
+        npm install
+        cd ../..
+        
+        # Start backend
+        echo "🚀 Starting backend server..."
+        cd demo-app/server
+        PORT=3000 MONGODB_URI=mongodb://localhost:27017/demo-app NODE_ENV=development JWT_SECRET=test-secret nohup npm start > ../../backend.log 2>&1 &
+        BACKEND_PID=$!
+        echo $BACKEND_PID > ../../backend.pid
+        cd ../..
+        echo "Backend started with PID: $BACKEND_PID"
+        
+        # Start frontend
+        echo "🚀 Starting frontend server..."
+        cd demo-app/client
+        VITE_API_URL=http://localhost:3000 nohup npm run dev -- --host 0.0.0.0 --port 5173 > ../../frontend.log 2>&1 &
+        FRONTEND_PID=$!
+        echo $FRONTEND_PID > ../../frontend.pid
+        cd ../..
+        echo "Frontend started with PID: $FRONTEND_PID"
+        
+        # Wait for backend
+        echo "⏳ Waiting for backend..."
+        for i in {1..60}; do
+          if curl -sf http://localhost:3000/api/products > /dev/null 2>&1; then
+            echo "✅ Backend ready"
+            break
+          fi
+          if [ $i -eq 60 ]; then
+            echo "❌ Backend failed to start"
+            cat backend.log
+            exit 1
+          fi
+          sleep 2
+        done
+        
+        # Wait for frontend
+        echo "⏳ Waiting for frontend..."
+        for i in {1..60}; do
+          if curl -sf http://localhost:5173 > /dev/null 2>&1; then
+            echo "✅ Frontend ready"
+            break
+          fi
+          if [ $i -eq 60 ]; then
+            echo "❌ Frontend failed to start"
+            cat frontend.log
+            exit 1
+          fi
+          sleep 2
+        done
+        
+        # Verify processes are still alive
+        if ! ps -p $BACKEND_PID > /dev/null; then
+          echo "❌ Backend process died"
+          cat backend.log
           exit 1
         fi
         
-        echo "Checking frontend PID: $FRONTEND_PID"
-        if ps -p $FRONTEND_PID > /dev/null; then
-          echo "✅ Frontend process $FRONTEND_PID is running"
-        else
-          echo "❌ Frontend process $FRONTEND_PID died!"
-          echo "Last 50 lines of frontend logs:"
-          tail -50 frontend.log
+        if ! ps -p $FRONTEND_PID > /dev/null; then
+          echo "❌ Frontend process died"
+          cat frontend.log
           exit 1
         fi
         
-        echo "✅ Both services confirmed running"
+        echo "✅ Both services are running and responding"
         
-        # Final health check
-        echo "🔍 Final health check..."
-        if curl -f http://localhost:3000/api/products > /dev/null 2>&1; then
-          echo "✅ Backend API responding"
-        else
-          echo "❌ Backend not responding"
-          tail -30 backend.log
-          exit 1
-        fi
+        # Run tests immediately while services are alive
+        echo "🧪 Running ${{ inputs.test-suite }} tests on ${{ matrix.browser }}..."
+        npx playwright test --project=${{ matrix.browser }} --grep="@${{ inputs.test-suite }}"
+        TEST_EXIT_CODE=$?
         
-        if curl -f http://localhost:5173 > /dev/null 2>&1; then
-          echo "✅ Frontend responding"
-        else
-          echo "❌ Frontend not responding"
-          tail -30 frontend.log
-          exit 1
-        fi
+        # Save logs for artifacts
+        echo "📋 Saving service logs..."
         
-        echo "✅ All pre-test verifications passed"
-
-    - name: Run ${{ inputs.test-suite }} Tests
-      run: |
-        echo "🧪 Running tests with configuration:"
-        echo "  BASE_URL: http://localhost:5173"
-        echo "  Browser: ${{ matrix.browser }}"
-        echo "  Test suite: @${{ inputs.test-suite }}"
-        echo ""
+        # Kill services
+        echo "🧹 Stopping services..."
+        kill $BACKEND_PID 2>/dev/null || true
+        kill $FRONTEND_PID 2>/dev/null || true
         
-        # Run tests with detailed output
-        npx playwright test --project=${{ matrix.browser }} --grep="@${{ inputs.test-suite }}" || {
-          echo "❌ Tests failed with exit code $?"
-          echo ""
-          echo "📋 Last 100 lines of backend log:"
-          tail -100 backend.log || echo "No backend log available"
-          echo ""
-          echo "📋 Last 100 lines of frontend log:"
-          tail -100 frontend.log || echo "No frontend log available"
-          exit 1
-        }
+        # Exit with test result
+        exit $TEST_EXIT_CODE
       env:
         BASE_URL: http://localhost:5173
         CI: true
@@ -260,19 +185,3 @@ jobs:
           frontend.log
         retention-days: 30
 
-    - name: Show service logs on failure
-      if: failure()
-      run: |
-        echo "📋 Backend logs:"
-        cat backend.log || echo "No backend logs"
-        echo ""
-        echo "📋 Frontend logs:"
-        cat frontend.log || echo "No frontend logs"
-
-    - name: Cleanup services
-      if: always()
-      run: |
-        echo "🧹 Terminating web services only (preserving all artifacts)..."
-        [ -f backend.pid ] && kill $(cat backend.pid) && echo "✅ Backend terminated" || echo "⚠️ Backend already stopped"
-        [ -f frontend.pid ] && kill $(cat frontend.pid) && echo "✅ Frontend terminated" || echo "⚠️ Frontend already stopped"
-        echo "✅ Service cleanup complete - All test artifacts preserved"
