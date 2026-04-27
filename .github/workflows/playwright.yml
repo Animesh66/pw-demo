@@ -1,4 +1,4 @@
-name: Playwright Tests (Docker)
+name: Playwright Tests with Demo Application
 
 on:
   push:
@@ -12,40 +12,8 @@ env:
   DOCKER_TAG: ${{ github.sha }}
 
 jobs:
-  build:
-    name: Build Docker Image
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Build Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: false
-        tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }},${{ env.DOCKER_IMAGE }}:latest
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        load: true
-
-    - name: Save Docker image
-      run: docker save ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} | gzip > docker-image.tar.gz
-
-    - name: Upload Docker image artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: docker-image
-        path: docker-image.tar.gz
-        retention-days: 1
-
   test:
     name: Run Tests - ${{ matrix.browser }}
-    needs: build
     timeout-minutes: 60
     runs-on: ubuntu-latest
     strategy:
@@ -54,35 +22,56 @@ jobs:
         browser: [chromium, firefox, webkit]
         
     steps:
-    - name: Checkout repository
+    - name: Checkout test framework repository
       uses: actions/checkout@v4
 
-    - name: Download Docker image artifact
-      uses: actions/download-artifact@v4
+    - name: Clone demo application
+      run: |
+        git clone https://github.com/Animesh66/demo-front-end.git demo-app
+        cp Dockerfile.backend demo-app/Dockerfile.backend
+        cp Dockerfile.frontend demo-app/Dockerfile.frontend
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Start MongoDB, Backend, and Frontend services
+      run: |
+        docker-compose up -d mongodb backend frontend
+        echo "⏳ Waiting for services to be healthy..."
+        sleep 45
+
+    - name: Verify services are running
+      run: |
+        echo "🔍 Checking MongoDB..."
+        docker-compose ps mongodb
+        echo ""
+        echo "🔍 Checking Backend..."
+        docker-compose ps backend
+        curl -f http://localhost:3000/api/products || exit 1
+        echo ""
+        echo "🔍 Checking Frontend..."
+        docker-compose ps frontend
+        curl -f http://localhost:5173 || exit 1
+        echo ""
+        echo "✅ All services are healthy"
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
       with:
-        name: docker-image
+        node-version: '20'
+        cache: 'npm'
 
-    - name: Load Docker image
-      run: docker load < docker-image.tar.gz
+    - name: Install dependencies
+      run: npm ci
 
-    - name: Create .env file
-      run: |
-        echo "BASE_URL=http://localhost:5173" >> .env
-        echo "NODE_ENV=ci" >> .env
-        echo "CI=true" >> .env
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps ${{ matrix.browser }}
 
-    - name: Run Playwright tests in Docker
-      run: |
-        docker run --rm \
-          -v $(pwd)/test-results:/app/test-results \
-          -v $(pwd)/playwright-report:/app/playwright-report \
-          -v $(pwd)/allure-results:/app/allure-results \
-          -v $(pwd)/logs:/app/logs \
-          -e CI=true \
-          -e BASE_URL=http://localhost:5173 \
-          -e NODE_ENV=ci \
-          ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }} \
-          npx playwright test --project=${{ matrix.browser }}
+    - name: Run Playwright tests
+      run: npx playwright test --project=${{ matrix.browser }}
+      env:
+        BASE_URL: http://localhost:5173
+        CI: true
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
@@ -116,9 +105,81 @@ jobs:
         path: logs/
         retention-days: 30
 
+    - name: Show service logs on failure
+      if: failure()
+      run: |
+        echo "📋 MongoDB logs:"
+        docker-compose logs mongodb
+        echo ""
+        echo "📋 Backend logs:"
+        docker-compose logs backend
+        echo ""
+        echo "📋 Frontend logs:"
+        docker-compose logs frontend
+
+    - name: Cleanup
+      if: always()
+      run: docker-compose down -v
+
+  test-docker:
+    name: Run Tests in Docker - Full Stack
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+        
+    steps:
+    - name: Checkout test framework repository
+      uses: actions/checkout@v4
+
+    - name: Clone demo application
+      run: |
+        git clone https://github.com/Animesh66/demo-front-end.git demo-app
+        cp Dockerfile.backend demo-app/Dockerfile.backend
+        cp Dockerfile.frontend demo-app/Dockerfile.frontend
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build all Docker images
+      run: docker-compose build
+
+    - name: Run all tests with Docker Compose
+      run: |
+        docker-compose up --abort-on-container-exit --exit-code-from playwright-tests
+      
+    - name: Copy test results from container
+      if: always()
+      run: |
+        # Test results are already mounted to host via volumes
+        ls -la test-results/ || true
+        ls -la playwright-report/ || true
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report-docker
+        path: playwright-report/
+        retention-days: 30
+
+    - name: Upload logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: logs-docker
+        path: logs/
+        retention-days: 30
+
+    - name: Show service logs on failure
+      if: failure()
+      run: docker-compose logs
+
+    - name: Cleanup
+      if: always()
+      run: docker-compose down -v
+
   report:
     name: Publish Test Report
-    needs: test
+    needs: [test, test-docker]
     runs-on: ubuntu-latest
     if: always()
     
@@ -130,7 +191,7 @@ jobs:
       uses: mikepenz/action-junit-report@v4
       if: always()
       with:
-        report_paths: '**/test-results/junit.xml'
+        report_paths: '**/test-results/**/junit.xml'
         check_name: Test Report
         detailed_summary: true
         include_passed: true

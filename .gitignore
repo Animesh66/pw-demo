@@ -12,3 +12,10 @@ logs/
 # Allure Reports
 allure-results/
 allure-report/
+
+# Demo Application
+demo-app/
+
+# Environment Variables
+.env
+.env.local

@@ -1,6 +1,73 @@
 version: '3.8'
 
 services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: demo-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=demo-app
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - demo-network
+
+  # Backend API Server
+  backend:
+    build:
+      context: ./demo-app
+      dockerfile: Dockerfile.backend
+    container_name: demo-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongodb:27017/demo-app
+      - JWT_SECRET=your-secret-key-here-change-in-production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/products"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - demo-network
+
+  # Frontend React Application
+  frontend:
+    build:
+      context: ./demo-app
+      dockerfile: Dockerfile.frontend
+    container_name: demo-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://backend:3000
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - demo-network
+
+  # Playwright Tests
   playwright-tests:
     build:
       context: .
@@ -10,16 +77,24 @@ services:
     environment:
       - NODE_ENV=ci
       - CI=true
-      - BASE_URL=${BASE_URL:-http://localhost:5173}
+      - BASE_URL=http://frontend:5173
     volumes:
-      # Mount test results for local access
       - ./test-results:/app/test-results
       - ./playwright-report:/app/playwright-report
       - ./allure-results:/app/allure-results
       - ./logs:/app/logs
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
     command: npm run ci:test
+    networks:
+      - demo-network
     
-  # Service for running specific test suites
+  # Service for running smoke tests
   playwright-smoke:
     build:
       context: .
@@ -29,13 +104,20 @@ services:
     environment:
       - NODE_ENV=ci
       - CI=true
-      - BASE_URL=${BASE_URL:-http://localhost:5173}
+      - BASE_URL=http://frontend:5173
     volumes:
       - ./test-results:/app/test-results
       - ./playwright-report:/app/playwright-report
       - ./allure-results:/app/allure-results
       - ./logs:/app/logs
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
     command: npm run test:smoke
+    networks:
+      - demo-network
     profiles:
       - smoke
       
@@ -49,12 +131,27 @@ services:
     environment:
       - NODE_ENV=ci
       - CI=true
-      - BASE_URL=${BASE_URL:-http://localhost:5173}
+      - BASE_URL=http://frontend:5173
     volumes:
       - ./test-results:/app/test-results
       - ./playwright-report:/app/playwright-report
       - ./allure-results:/app/allure-results
       - ./logs:/app/logs
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
     command: npm run test:regression
+    networks:
+      - demo-network
     profiles:
       - regression
+
+volumes:
+  mongodb-data:
+    driver: local
+
+networks:
+  demo-network:
+    driver: bridge

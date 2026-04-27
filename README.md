@@ -2,6 +2,43 @@
 
 A robust, scalable test automation framework built with Playwright and TypeScript, following industry best practices and design patterns.
 
+## � Quick Links
+
+- **[Running Tests](RUNNING_TESTS.md)** - Complete guide to run tests with demo application
+- **[Docker Setup](DOCKER.md)** - Detailed Docker and containerization guide
+- **[GitHub Actions](.github/workflows/playwright.yml)** - CI/CD workflow configuration
+
+## 🚀 Quick Start
+
+### Run Tests with Demo Application (Recommended)
+
+```bash
+# One command to setup, start services, and run tests
+npm run test:with-app
+```
+
+This will:
+1. Clone the demo e-commerce application
+2. Start MongoDB, Backend API, and Frontend with Docker
+3. Run all Playwright tests
+4. Generate test reports
+
+### Manual Setup
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Setup and start demo application
+npm run setup:demo-app
+npm run docker:up
+
+# 3. Run tests
+npm test
+```
+
+See [RUNNING_TESTS.md](RUNNING_TESTS.md) for detailed instructions.
+
 ## 🚀 Features
 
 - **Page Object Model (POM)** - Clean separation of test logic and page interactions
@@ -11,12 +48,12 @@ A robust, scalable test automation framework built with Playwright and TypeScrip
 - **Data-Driven Testing** - CSV-based test data management
 - **TypeScript** - Full type safety and IntelliSense support
 - **Environment Configuration** - Centralized config with .env support
-- **Custom Utilities** - Wait helpers, action helpers, assertion helpers
 - **Comprehensive Logging** - Custom logger with file and console output
 - **Test Fixtures** - Dependency injection pattern for page objects
 - **Allure Reporting** - Beautiful, detailed test reports
 - **Code Quality** - ESLint and Prettier configuration
 - **CI/CD Ready** - GitHub Actions workflow included
+- **Docker Support** - Multi-container orchestration with Docker Compose
 - **Multiple Browsers** - Support for Chromium, Firefox, WebKit, and mobile
 - **Parallel Execution** - Fast test execution with configurable workers
 
