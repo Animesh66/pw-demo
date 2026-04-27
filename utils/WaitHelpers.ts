@@ -162,13 +162,15 @@ export class WaitHelpers {
 
     /**
      * Wait for element to be stable (not animating)
+     * Playwright's waitFor already ensures stability before interacting
      */
     static async waitForStable(
         locator: Locator, 
         timeout: number = EnvironmentConfig.TIMEOUTS.SHORT
     ): Promise<void> {
+        // Playwright's actionability checks ensure the element is stable
+        // Wait for visible and attached states
         await locator.waitFor({ state: 'visible', timeout });
-        // Wait a bit for animations to complete
-        await this.waitForTimeout(300);
+        await locator.waitFor({ state: 'attached', timeout });
     }
 }

@@ -1,4 +1,5 @@
-import { test as setup, expect } from '@playwright/test';
+/* eslint-disable no-console */
+import { test as setup } from '@playwright/test';
 import { AuthConfig } from '../config/auth.config';
 import { CSVOperations } from '../utils';
 
@@ -25,7 +26,9 @@ setup('authenticate', async ({ page }) => {
     // Navigate to login page
     console.log('Navigating to login page...');
     await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+    
+    // Wait for login form to be ready
+    await page.locator('input[type="email"], input[name="email"]').waitFor({ state: 'visible' });
 
     // Perform authentication steps
     console.log('Filling login credentials...');
@@ -41,13 +44,9 @@ setup('authenticate', async ({ page }) => {
     await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 10000 });
     console.log('Login successful!');
 
-    // Alternatively, you can wait until the page reaches a state where all cookies are set
-    await page.waitForTimeout(2000); // Give time for all cookies/storage to be set
-
-    // Verify we're on a logged-in page
+    // Verify we're on a logged-in page (waitForURL already validated we're not on /login)
     const currentUrl = page.url();
     console.log(`Current URL after login: ${currentUrl}`);
-    expect(currentUrl).not.toContain('/login');
 
     // End of authentication steps
     console.log(`Saving storage state to: ${authFile}`);

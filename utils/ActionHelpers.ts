@@ -202,7 +202,7 @@ export class ActionHelpers {
         urlPattern?: string | RegExp
     ): Promise<void> {
         await Promise.all([
-            urlPattern ? page.waitForURL(urlPattern) : page.waitForLoadState('networkidle'),
+            urlPattern ? page.waitForURL(urlPattern) : page.waitForLoadState('load'),
             locator.click()
         ]);
     }

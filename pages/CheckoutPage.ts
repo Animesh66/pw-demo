@@ -103,6 +103,7 @@ export class CheckoutPage extends BasePage {
      */
     async attemptPayment(): Promise<void> {
         await this.payButton.click();
+        // Playwright's auto-waiting will handle any validation that appears
     }
 
     /**

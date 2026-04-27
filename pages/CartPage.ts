@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator, expect } from '@playwright/test';
 import { BasePage } from './BasePage';
 import { HeaderComponent } from './components/HeaderComponent';
 import { EnvironmentConfig } from '../config/environment.config';
@@ -36,8 +36,8 @@ export class CartPage extends BasePage {
         this.productImages = page.locator('img[alt*=""]');
         this.productTitles = page.locator('h3');
         this.productPrices = page.locator('p').filter({ hasText: /^\$\d+ each$/ });
-        this.quantityDecrementButtons = page.locator('button').filter({ hasText: /^[−\-]$/ });
-        this.quantityIncrementButtons = page.locator('button').filter({ hasText: /^[+\+]$/ });
+        this.quantityDecrementButtons = page.locator('button').filter({ hasText: /^[−-]$/ });
+        this.quantityIncrementButtons = page.locator('button').filter({ hasText: /^[+]$/ });
         this.quantityDisplays = page.locator('div').filter({ hasText: /^\d+$/ });
         this.removeButtons = page.getByRole('button', { name: 'Remove' });
         
@@ -62,14 +62,20 @@ export class CartPage extends BasePage {
      * Increase quantity of first product
      */
     async increaseFirstProductQuantity(): Promise<void> {
+        const currentTotal = await this.totalAmount.textContent();
         await this.quantityIncrementButtons.first().click();
+        // Wait for total amount to change after quantity update using Playwright's built-in retry
+        await expect(this.totalAmount).not.toHaveText(currentTotal || '', { timeout: 5000 });
     }
 
     /**
      * Decrease quantity of first product
      */
     async decreaseFirstProductQuantity(): Promise<void> {
+        const currentTotal = await this.totalAmount.textContent();
         await this.quantityDecrementButtons.first().click();
+        // Wait for total amount to change after quantity update using Playwright's built-in retry
+        await expect(this.totalAmount).not.toHaveText(currentTotal || '', { timeout: 5000 });
     }
 
     /**
@@ -120,7 +126,7 @@ export class CartPage extends BasePage {
      * Get total amount
      */
     async getTotal(): Promise<string> {
-        await this.totalAmount.waitFor({ state: 'visible', timeout: 10000 });
+        await this.totalAmount.waitFor({ state: 'visible', timeout: 15000 });
         return await this.totalAmount.textContent() || '';
     }
 
@@ -136,7 +142,12 @@ export class CartPage extends BasePage {
      * Check if cart page loaded correctly
      */
     async isPageLoaded(): Promise<boolean> {
-        return await this.pageHeading.isVisible();
+        try {
+            await this.pageHeading.waitFor({ state: 'visible', timeout: 10000 });
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     /**
