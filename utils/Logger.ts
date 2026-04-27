@@ -184,6 +184,10 @@ export class Logger {
      */
     private static writeToFile(message: string): void {
         try {
+            // Ensure log directory exists before writing
+            if (!fs.existsSync(this.logDirectory)) {
+                fs.mkdirSync(this.logDirectory, { recursive: true });
+            }
             fs.appendFileSync(this.logFilePath, message);
         } catch (error) {
             console.error('Failed to write to log file:', error);
