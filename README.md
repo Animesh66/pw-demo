@@ -14,6 +14,7 @@ A robust, scalable test automation framework built with Playwright and TypeScrip
 
 ```bash
 # One command to setup, start services, and run tests
+# Services are automatically stopped after tests complete
 npm run test:with-app
 ```
 

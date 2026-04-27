@@ -10,6 +10,8 @@ The test framework now includes Docker Compose configuration to automatically sp
 - **Frontend** (React + Vite)
 - **Playwright Tests**
 
+**Important**: All services are automatically stopped after tests complete, whether they pass or fail. This ensures no lingering Docker containers consuming system resources.
+
 ## Prerequisites
 
 - Docker and Docker Compose installed
@@ -31,7 +33,8 @@ This will:
 2. Start MongoDB, Backend, and Frontend services
 3. Wait for services to be healthy
 4. Run all Playwright tests
-5. Generate test reports
+5. **Automatically stop all Docker services** (whether tests pass or fail)
+6. Generate test reports
 
 ### Option 2: Step-by-Step Setup
 
@@ -62,48 +65,88 @@ This starts:
 Wait about 30 seconds for services to be ready.
 
 #### Step 3: Run Tests
-
-**Option A: Tests in Docker**
+with automatic cleanup (Recommended)**
 ```bash
-npm run docker:test
+# Runs tests and automatically stops services when done
+npm run test:with-app           # All tests
+npm run test:with-app:smoke     # Smoke tests only
+npm run test:with-app:regression # Regression tests only
+npm run test:with-app:docker    # Tests in Docker container
 ```
 
-**Option B: Tests locally (faster, better for debugging)**
+**Option B: Tests in Docker (manual cleanup)**
 ```bash
+npm run docker:test              # Stops services after tests
+```
+
+**Option C: Tests locally (manual start/stop)**
+```bash
+# 1. Start services first
+npm run docker:up
+
+# 2. Run tests
+npm test
+
+# 3. Stop services when done
+npm run docker:down
 npm test
 ```
 
-Or run specific test suites:
-```bash
-npm run test:order                    # All order tests
-npm run test:registration             # All registration tests
-npm run test:order-happy-path        # Happy path order tests
-npm run test:chrome                  # Tests in Chrome only
-```
-
-#### Step 4: View Results
+Or run specific test suites:, you can run tests locally while services run in Docker:
 
 ```bash
-npm run test:report   # Open HTML report
-```
+# Option 1: Automatic cleanup (Recommended)
+npm run test:with-app
 
-## Running Tests Locally Against Docker Services
-
-For faster test execution and easier debugging:
-
-```bash
+# Option 2: Manual control
 # 1. Start services
 npm run docker:up
 
-# 2. Wait 30 seconds, then run tests locally
-npm run test:local-with-app
+# 2. Wait 30 seconds, then run tests
+npm test
 
-# Or run specific tests
+# 3. Stop services when done
+npm run docker:down
+```
+
+Run specific tests:
+```bash
 npm test tests/order-test/
 npm run test:headed   # With browser UI
 npm run test:debug    # With debugger
 npm run test:ui       # With Playwright UI mode
 ```
+
+**Note**: Services will keep running until you explicitly stop them with `npm run docker:down`.Running Tests Locally Against Docker Services
+
+For faster test execution and easier debugging:
+
+```bash
+# 1. Start services
+npm run docker:upand remove containers
+npm run docker:stop            # Stop containers (don't remove)
+npm run docker:logs            # View logs
+npm run docker:clean           # Clean up everything
+npm run docker:rebuild         # Rebuild from scratch
+```
+
+**Important**: The `test:with-app` commands automatically stop services after tests complete. If you manually start services with `docker:up`, remember to stop them with `docker:down` when done.
+
+### Test Execution
+
+```bash
+npm run docker:test            # Run all tests in Docker
+npm run docker:test:smoke      # Run smoke tests
+npm run docker:test:regression # Run regression tests
+npm run test:with-app          # Run locally with auto cleanup
+npm run test:with-app:smoke    # Run smoke tests with auto cleanup
+npm run test:with-app:regression # Run regression with auto cleanup
+npm test                       # Run tests locally (services must be running)
+npm run test:headed            # Run with browser UI
+npm run test:debug             # Run with debugger
+```
+
+**Note**: All `docker:test` and `test:with-app` commands automatically stop Docker services after tests complete.
 
 ## Service URLs
 
@@ -120,11 +163,14 @@ You can manually test the application by opening http://localhost:5173 in your b
 
 ```bash
 npm run docker:up              # Start services
-npm run docker:down            # Stop services
+npm run docker:down            # Stop and remove containers
+npm run docker:stop            # Stop containers (don't remove)
 npm run docker:logs            # View logs
 npm run docker:clean           # Clean up everything
 npm run docker:rebuild         # Rebuild from scratch
 ```
+
+**Important**: The `test:with-app` commands automatically stop services after tests complete. If you manually start services with `docker:up`, remember to stop them with `docker:down` when done.
 
 ### Test Execution
 
@@ -132,15 +178,23 @@ npm run docker:rebuild         # Rebuild from scratch
 npm run docker:test            # Run all tests in Docker
 npm run docker:test:smoke      # Run smoke tests
 npm run docker:test:regression # Run regression tests
-npm test                       # Run tests locally
+npm run test:with-app          # Run locally with auto cleanup
+npm run test:with-app:smoke    # Run smoke tests with auto cleanup
+npm run test:with-app:regression # Run regression with auto cleanup
+npm test                       # Run tests locally (services must be running)
 npm run test:headed            # Run with browser UI
 npm run test:debug             # Run with debugger
 ```
 
+**Note**: All `docker:test` and `test:with-app` commands automatically stop Docker services after tests complete.
+
 ### Reports
 
-```bash
-npm run test:report            # View HTML report
+``Stop any running services
+docker-compose down
+
+# Restart services
+npm run docker:up # View HTML report
 npm run test:with-allure       # Generate Allure report
 npm run allure:serve           # View Allure report
 ```
@@ -171,7 +225,20 @@ curl http://localhost:5173                # Should return HTML
 ```
 
 2. **Check MongoDB:**
+```bServices still running after tests
+
+If you manually started services with `docker:up`:
 ```bash
+# Stop services
+npm run docker:down
+
+# Or just stop without removing
+npm run docker:stop
+```
+
+The `test:with-app` and `docker:test` commands automatically clean up services, so this shouldn't be needed for those.
+
+### ash
 docker-compose logs mongodb
 ```
 
@@ -248,15 +315,17 @@ The GitHub Actions workflow automatically:
 
 See `.github/workflows/playwright.yml` for details.
 
-## Project Structure
+## Project Stru (if manually started)
+npm run docker:down
 
+# Remove all Docker resources
+npm run docker:clean
+
+# Remove demo application
+rm -rf demo-app
 ```
-pw-demo/
-├── demo-app/                    # Cloned demo application (not in git)
-│   ├── client/                  # React frontend
-│   ├── server/                  # Express backend
-│   ├── Dockerfile.backend       # Copied from root
-│   └── Dockerfile.frontend      # Copied from root
+
+**Note**: When using `npm run test:with-app`, cleanup happens automatically. Manual cleanup is only needed if you used `npm run docker:up` to start services. └── Dockerfile.frontend      # Copied from root
 ├── tests/                       # Playwright tests
 ├── pages/                       # Page Object Models
 ├── docker-compose.yml           # Multi-service orchestration

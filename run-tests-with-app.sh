@@ -5,6 +5,23 @@
 
 set -e  # Exit on error
 
+# Add Docker to PATH if not already available (macOS Docker Desktop)
+if ! command -v docker &> /dev/null; then
+    if [ -f "/Applications/Docker.app/Contents/Resources/bin/docker" ]; then
+        export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
+    fi
+fi
+
+# Use 'docker compose' (V2) if available, otherwise fall back to 'docker-compose' (V1)
+if docker compose version &> /dev/null; then
+    DOCKER_COMPOSE="docker compose"
+elif command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE="docker-compose"
+else
+    echo -e "${RED}❌ Docker Compose is not available. Please install Docker Desktop.${NC}"
+    exit 1
+fi
+
 # Color codes for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -18,7 +35,7 @@ cleanup() {
     echo -e "${YELLOW}🧹 Cleaning up Docker services...${NC}"
     
     # Stop all services
-    docker-compose down
+    $DOCKER_COMPOSE down
     
     if [ $exit_code -eq 0 ]; then
         echo -e "${GREEN}✅ Tests completed successfully and services stopped${NC}"
@@ -42,7 +59,7 @@ echo ""
 
 # Step 2: Start Docker services
 echo -e "${YELLOW}🐳 Step 2/4: Starting Docker services (MongoDB, Backend, Frontend)...${NC}"
-docker-compose up -d mongodb backend frontend
+$DOCKER_COMPOSE up -d mongodb backend frontend
 echo ""
 
 # Step 3: Wait for services to be healthy
@@ -55,7 +72,7 @@ if curl -f http://localhost:3000/api/products > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Backend is healthy${NC}"
 else
     echo -e "${RED}✗ Backend is not responding${NC}"
-    docker-compose logs backend
+    $DOCKER_COMPOSE logs backend
     exit 1
 fi
 
@@ -63,7 +80,7 @@ if curl -f http://localhost:5173 > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Frontend is healthy${NC}"
 else
     echo -e "${RED}✗ Frontend is not responding${NC}"
-    docker-compose logs frontend
+    $DOCKER_COMPOSE logs frontend
     exit 1
 fi
 
@@ -77,7 +94,7 @@ echo ""
 # Run tests based on first argument
 if [ "$1" == "docker" ]; then
     echo "Running tests in Docker container..."
-    docker-compose up --abort-on-container-exit --exit-code-from playwright-tests playwright-tests
+    $DOCKER_COMPOSE up --abort-on-container-exit --exit-code-from playwright-tests playwright-tests
 elif [ "$1" == "smoke" ]; then
     echo "Running smoke tests locally..."
     BASE_URL=http://localhost:5173 npm run test:smoke
