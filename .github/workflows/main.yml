@@ -38,6 +38,10 @@ jobs:
   publish-reports:
     name: Generate Test Reports
     needs: [test-order, test-registration]
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     uses: ./.github/workflows/publish-reports.yml
     with:
       report-name: Playwright Test Report

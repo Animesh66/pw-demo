@@ -67,6 +67,8 @@ This project uses a modular GitHub Actions setup with separate workflow files fo
 - `checks: write`
 - `pull-requests: write`
 
+**Note:** When calling this workflow from another workflow (like main.yml), you must explicitly grant these permissions using the `permissions:` key at the job level.
+
 ### 5. **cleanup-services.yml** - Cleanup & Summary
 **Purpose:** Reusable workflow for final cleanup and pipeline summary
 
