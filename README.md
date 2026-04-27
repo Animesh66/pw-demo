@@ -127,7 +127,7 @@ pw-demo/
 │   ├── order-negative.spec.ts   # Negative order tests
 │   ├── user-registration.spec.ts # Non-authenticated tests
 │   └── base/
-│       └── BaseTest.ts          # Custom test fixtures
+│       └── base-test.ts         # Custom test fixtures
 ├── types/                        # TypeScript type definitions
 │   └── test-data.types.ts
 ├── utils/                        # Utility functions
@@ -326,7 +326,7 @@ npx playwright test --trace on
 Tests automatically start with authenticated state:
 
 ```typescript
-import { test, expect } from './base/BaseTest';
+import { test, expect } from './base/base-test';
 import { Logger } from '../utils';
 
 test.describe('Order Placement', () => {
@@ -462,7 +462,7 @@ export class ProductPage extends BasePage {
 ### 2. Add to BaseTest Fixtures
 
 ```typescript
-// tests/base/BaseTest.ts
+// tests/base/base-test.ts
 import { ProductPage } from '../../pages/ProductPage';
 
 type PageObjects = {

@@ -1,4 +1,4 @@
-import { test, expect } from '../base/BaseTest';
+import { test, expect } from '../base/base-test';
 import { Logger, CSVOperations } from '../../utils';
 
 /**
