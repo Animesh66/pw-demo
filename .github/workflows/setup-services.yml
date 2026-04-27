@@ -38,20 +38,27 @@ jobs:
         git clone https://github.com/Animesh66/demo-front-end.git demo-app
         echo "✅ Repository cloned"
 
-    - name: Install Backend dependencies
+    - name: Install and Start Backend
       run: |
         echo "📦 Installing backend dependencies..."
         cd demo-app/server
         npm install
         echo "✅ Backend dependencies installed"
-
-    - name: Start Backend server
-      run: |
+        
         echo "🚀 Starting backend server..."
-        cd demo-app/server
-        PORT=3000 MONGODB_URI=mongodb://localhost:27017/demo-app NODE_ENV=development JWT_SECRET=test-secret nohup npm start > ../../backend.log 2>&1 &
-        echo $! > ../../backend.pid
-        echo "✅ Backend server started (PID: $(cat ../../backend.pid))"
+        WORK_DIR=$(pwd | sed 's|/demo-app/server||')
+        setsid npm start > "${WORK_DIR}/backend.log" 2>&1 < /dev/null &
+        BACKEND_PID=$!
+        echo $BACKEND_PID > "${WORK_DIR}/backend.pid"
+        echo "✅ Backend server started (PID: $BACKEND_PID)"
+        
+        # Verify process is running
+        ps -p $BACKEND_PID && echo "✅ Backend process confirmed running" || echo "❌ Backend process not found"
+      env:
+        PORT: 3000
+        MONGODB_URI: mongodb://localhost:27017/demo-app
+        NODE_ENV: development
+        JWT_SECRET: test-secret
 
     - name: Wait for Backend API
       run: |
@@ -69,20 +76,24 @@ jobs:
         cat backend.log
         exit 1
 
-    - name: Install Frontend dependencies
+    - name: Install and Start Frontend
       run: |
         echo "📦 Installing frontend dependencies..."
         cd demo-app/client
         npm install
         echo "✅ Frontend dependencies installed"
-
-    - name: Start Frontend server
-      run: |
+        
         echo "🚀 Starting frontend server..."
-        cd demo-app/client
-        VITE_API_URL=http://localhost:3000 nohup npm run dev -- --host 0.0.0.0 --port 5173 > ../../frontend.log 2>&1 &
-        echo $! > ../../frontend.pid
-        echo "✅ Frontend server started (PID: $(cat ../../frontend.pid))"
+        WORK_DIR=$(pwd | sed 's|/demo-app/client||')
+        setsid npm run dev -- --host 0.0.0.0 --port 5173 > "${WORK_DIR}/frontend.log" 2>&1 < /dev/null &
+        FRONTEND_PID=$!
+        echo $FRONTEND_PID > "${WORK_DIR}/frontend.pid"
+        echo "✅ Frontend server started (PID: $FRONTEND_PID)"
+        
+        # Verify process is running
+        ps -p $FRONTEND_PID && echo "✅ Frontend process confirmed running" || echo "❌ Frontend process not found"
+      env:
+        VITE_API_URL: http://localhost:3000
 
     - name: Wait for Frontend
       run: |

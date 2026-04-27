@@ -49,17 +49,40 @@ jobs:
       run: |
         git clone https://github.com/Animesh66/demo-front-end.git demo-app
         
+        # Get absolute paths
+        WORK_DIR=$(pwd)
+        
         # Install and start backend
         cd demo-app/server
         npm install
-        PORT=3000 MONGODB_URI=mongodb://localhost:27017/demo-app NODE_ENV=development JWT_SECRET=test-secret nohup npm start > ../../backend.log 2>&1 &
-        echo $! > ../../backend.pid
+        # Start in background with setsid to create new session (survives shell exit)
+        setsid npm start > "${WORK_DIR}/backend.log" 2>&1 < /dev/null &
+        BACKEND_PID=$!
+        echo $BACKEND_PID > "${WORK_DIR}/backend.pid"
+        cd "${WORK_DIR}"
         
         # Install and start frontend
-        cd ../client
+        cd demo-app/client
         npm install
-        VITE_API_URL=http://localhost:3000 nohup npm run dev -- --host 0.0.0.0 --port 5173 > ../../frontend.log 2>&1 &
-        echo $! > ../../frontend.pid
+        # Start in background with setsid to create new session (survives shell exit)
+        setsid npm run dev -- --host 0.0.0.0 --port 5173 > "${WORK_DIR}/frontend.log" 2>&1 < /dev/null &
+        FRONTEND_PID=$!
+        echo $FRONTEND_PID > "${WORK_DIR}/frontend.pid"
+        cd "${WORK_DIR}"
+        
+        # Verify PID files were created
+        echo "Backend PID: $(cat backend.pid)"
+        echo "Frontend PID: $(cat frontend.pid)"
+        
+        # Verify processes are running
+        ps -p $(cat backend.pid) && echo "✅ Backend process running" || echo "❌ Backend process not found"
+        ps -p $(cat frontend.pid) && echo "✅ Frontend process running" || echo "❌ Frontend process not found"
+      env:
+        PORT: 3000
+        MONGODB_URI: mongodb://localhost:27017/demo-app
+        NODE_ENV: development
+        JWT_SECRET: test-secret
+        VITE_API_URL: http://localhost:3000
 
     - name: Wait for services
       run: |
@@ -105,6 +128,29 @@ jobs:
 
     - name: Install Playwright browsers
       run: npx playwright install --with-deps ${{ matrix.browser }}
+
+    - name: Verify services before test execution
+      run: |
+        echo "🔍 Verifying services are still running..."
+        if ! ps -p $(cat backend.pid) > /dev/null; then
+          echo "❌ Backend process died!"
+          echo "Last backend logs:"
+          tail -50 backend.log
+          exit 1
+        fi
+        if ! ps -p $(cat frontend.pid) > /dev/null; then
+          echo "❌ Frontend process died!"
+          echo "Last frontend logs:"
+          tail -50 frontend.log
+          exit 1
+        fi
+        echo "✅ Both services confirmed running"
+        
+        # Final health check
+        echo "🔍 Final health check..."
+        curl -f http://localhost:3000/api/products || { echo "❌ Backend not responding"; exit 1; }
+        curl -f http://localhost:5173 || { echo "❌ Frontend not responding"; exit 1; }
+        echo "✅ Services responding to requests"
 
     - name: Run ${{ inputs.test-suite }} Tests
       run: npx playwright test --project=${{ matrix.browser }} --grep="@${{ inputs.test-suite }}"
