@@ -8,12 +8,11 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_IMAGE: pw-demo-tests
-  DOCKER_TAG: ${{ github.sha }}
+  BASE_URL: http://localhost:5173
 
 jobs:
-  test:
-    name: Run Tests - ${{ matrix.browser }}
+  test-order:
+    name: Order Tests - ${{ matrix.browser }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
     strategy:
@@ -67,41 +66,41 @@ jobs:
     - name: Install Playwright browsers
       run: npx playwright install --with-deps ${{ matrix.browser }}
 
-    - name: Run Playwright tests
-      run: npx playwright test --project=${{ matrix.browser }}
+    - name: Run Order Tests
+      run: npx playwright test --project=${{ matrix.browser }} --grep="@order"
       env:
         BASE_URL: http://localhost:5173
         CI: true
 
-    - name: Upload test results
+    - name: Upload Playwright HTML Report
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: playwright-report-${{ matrix.browser }}
+        name: playwright-report-order-${{ matrix.browser }}
         path: playwright-report/
         retention-days: 30
 
-    - name: Upload test artifacts
+    - name: Upload Test Results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-results-${{ matrix.browser }}
+        name: test-results-order-${{ matrix.browser }}
         path: test-results/
         retention-days: 30
 
-    - name: Upload allure results
+    - name: Upload Allure Results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: allure-results-${{ matrix.browser }}
+        name: allure-results-order-${{ matrix.browser }}
         path: allure-results/
         retention-days: 30
 
-    - name: Upload logs
+    - name: Upload Logs
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: logs-${{ matrix.browser }}
+        name: logs-order-${{ matrix.browser }}
         path: logs/
         retention-days: 30
 
@@ -117,14 +116,18 @@ jobs:
         echo "📋 Frontend logs:"
         docker compose logs frontend
 
-    - name: Cleanup
+    - name: Cleanup services
       if: always()
       run: docker compose down -v
 
-  test-docker:
-    name: Run Tests in Docker - Full Stack
+  test-registration:
+    name: Registration Tests - ${{ matrix.browser }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
         
     steps:
     - name: Checkout test framework repository
@@ -139,47 +142,96 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Build all Docker images
-      run: docker compose build
-
-    - name: Run all tests with Docker Compose
+    - name: Start MongoDB, Backend, and Frontend services
       run: |
-        docker compose up --abort-on-container-exit --exit-code-from playwright-tests
-      
-    - name: Copy test results from container
-      if: always()
-      run: |
-        # Test results are already mounted to host via volumes
-        ls -la test-results/ || true
-        ls -la playwright-report/ || true
+        docker compose up -d mongodb backend frontend
+        echo "⏳ Waiting for services to be healthy..."
+        sleep 45
 
-    - name: Upload test results
+    - name: Verify services are running
+      run: |
+        echo "🔍 Checking MongoDB..."
+        docker compose ps mongodb
+        echo ""
+        echo "🔍 Checking Backend..."
+        docker compose ps backend
+        curl -f http://localhost:3000/api/products || exit 1
+        echo ""
+        echo "🔍 Checking Frontend..."
+        docker compose ps frontend
+        curl -f http://localhost:5173 || exit 1
+        echo ""
+        echo "✅ All services are healthy"
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps ${{ matrix.browser }}
+
+    - name: Run Registration Tests
+      run: npx playwright test --project=${{ matrix.browser }} --grep="@registration"
+      env:
+        BASE_URL: http://localhost:5173
+        CI: true
+
+    - name: Upload Playwright HTML Report
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: playwright-report-docker
+        name: playwright-report-registration-${{ matrix.browser }}
         path: playwright-report/
         retention-days: 30
 
-    - name: Upload logs
+    - name: Upload Test Results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: logs-docker
+        name: test-results-registration-${{ matrix.browser }}
+        path: test-results/
+        retention-days: 30
+
+    - name: Upload Allure Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-results-registration-${{ matrix.browser }}
+        path: allure-results/
+        retention-days: 30
+
+    - name: Upload Logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: logs-registration-${{ matrix.browser }}
         path: logs/
         retention-days: 30
 
     - name: Show service logs on failure
       if: failure()
-      run: docker compose logs
+      run: |
+        echo "📋 MongoDB logs:"
+        docker compose logs mongodb
+        echo ""
+        echo "📋 Backend logs:"
+        docker compose logs backend
+        echo ""
+        echo "📋 Frontend logs:"
+        docker compose logs frontend
 
-    - name: Cleanup
+    - name: Cleanup services
       if: always()
       run: docker compose down -v
 
   report:
     name: Publish Test Report
-    needs: [test, test-docker]
+    needs: [test-order, test-registration]
     runs-on: ubuntu-latest
     if: always()
     permissions:
