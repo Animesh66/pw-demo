@@ -36,21 +36,21 @@ jobs:
 
     - name: Start MongoDB, Backend, and Frontend services
       run: |
-        docker-compose up -d mongodb backend frontend
+        docker compose up -d mongodb backend frontend
         echo "⏳ Waiting for services to be healthy..."
         sleep 45
 
     - name: Verify services are running
       run: |
         echo "🔍 Checking MongoDB..."
-        docker-compose ps mongodb
+        docker compose ps mongodb
         echo ""
         echo "🔍 Checking Backend..."
-        docker-compose ps backend
+        docker compose ps backend
         curl -f http://localhost:3000/api/products || exit 1
         echo ""
         echo "🔍 Checking Frontend..."
-        docker-compose ps frontend
+        docker compose ps frontend
         curl -f http://localhost:5173 || exit 1
         echo ""
         echo "✅ All services are healthy"
@@ -58,7 +58,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '24'
         cache: 'npm'
 
     - name: Install dependencies
@@ -109,17 +109,17 @@ jobs:
       if: failure()
       run: |
         echo "📋 MongoDB logs:"
-        docker-compose logs mongodb
+        docker compose logs mongodb
         echo ""
         echo "📋 Backend logs:"
-        docker-compose logs backend
+        docker compose logs backend
         echo ""
         echo "📋 Frontend logs:"
-        docker-compose logs frontend
+        docker compose logs frontend
 
     - name: Cleanup
       if: always()
-      run: docker-compose down -v
+      run: docker compose down -v
 
   test-docker:
     name: Run Tests in Docker - Full Stack
@@ -140,11 +140,11 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Build all Docker images
-      run: docker-compose build
+      run: docker compose build
 
     - name: Run all tests with Docker Compose
       run: |
-        docker-compose up --abort-on-container-exit --exit-code-from playwright-tests
+        docker compose up --abort-on-container-exit --exit-code-from playwright-tests
       
     - name: Copy test results from container
       if: always()
@@ -171,17 +171,21 @@ jobs:
 
     - name: Show service logs on failure
       if: failure()
-      run: docker-compose logs
+      run: docker compose logs
 
     - name: Cleanup
       if: always()
-      run: docker-compose down -v
+      run: docker compose down -v
 
   report:
     name: Publish Test Report
     needs: [test, test-docker]
     runs-on: ubuntu-latest
     if: always()
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     
     steps:
     - name: Download all artifacts
