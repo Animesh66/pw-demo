@@ -40,20 +40,29 @@ jobs:
 
     - name: Install and Start Backend
       run: |
+        WORK_DIR=$(pwd)
+        echo "Working directory: ${WORK_DIR}"
+        
         echo "📦 Installing backend dependencies..."
         cd demo-app/server
         npm install
         echo "✅ Backend dependencies installed"
         
         echo "🚀 Starting backend server..."
-        WORK_DIR=$(pwd | sed 's|/demo-app/server||')
-        setsid npm start > "${WORK_DIR}/backend.log" 2>&1 < /dev/null &
+        nohup npm start > "${WORK_DIR}/backend.log" 2>&1 &
         BACKEND_PID=$!
         echo $BACKEND_PID > "${WORK_DIR}/backend.pid"
-        echo "✅ Backend server started (PID: $BACKEND_PID)"
+        echo "Backend started with PID: $BACKEND_PID"
+        sleep 2
         
-        # Verify process is running
-        ps -p $BACKEND_PID && echo "✅ Backend process confirmed running" || echo "❌ Backend process not found"
+        # Verify backend process
+        if ps -p $BACKEND_PID > /dev/null; then
+          echo "✅ Backend process $BACKEND_PID is running"
+        else
+          echo "❌ Backend process $BACKEND_PID died immediately"
+          cat "${WORK_DIR}/backend.log"
+          exit 1
+        fi
       env:
         PORT: 3000
         MONGODB_URI: mongodb://localhost:27017/demo-app
@@ -78,20 +87,29 @@ jobs:
 
     - name: Install and Start Frontend
       run: |
+        WORK_DIR=$(pwd)
+        echo "Working directory: ${WORK_DIR}"
+        
         echo "📦 Installing frontend dependencies..."
         cd demo-app/client
         npm install
         echo "✅ Frontend dependencies installed"
         
         echo "🚀 Starting frontend server..."
-        WORK_DIR=$(pwd | sed 's|/demo-app/client||')
-        setsid npm run dev -- --host 0.0.0.0 --port 5173 > "${WORK_DIR}/frontend.log" 2>&1 < /dev/null &
+        nohup npm run dev -- --host 0.0.0.0 --port 5173 > "${WORK_DIR}/frontend.log" 2>&1 &
         FRONTEND_PID=$!
         echo $FRONTEND_PID > "${WORK_DIR}/frontend.pid"
-        echo "✅ Frontend server started (PID: $FRONTEND_PID)"
+        echo "Frontend started with PID: $FRONTEND_PID"
+        sleep 2
         
-        # Verify process is running
-        ps -p $FRONTEND_PID && echo "✅ Frontend process confirmed running" || echo "❌ Frontend process not found"
+        # Verify frontend process
+        if ps -p $FRONTEND_PID > /dev/null; then
+          echo "✅ Frontend process $FRONTEND_PID is running"
+        else
+          echo "❌ Frontend process $FRONTEND_PID died immediately"
+          cat "${WORK_DIR}/frontend.log"
+          exit 1
+        fi
       env:
         VITE_API_URL: http://localhost:3000
 
