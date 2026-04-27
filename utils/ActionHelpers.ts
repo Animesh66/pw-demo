@@ -7,28 +7,17 @@ import { Logger } from './Logger';
  */
 export class ActionHelpers {
     /**
-     * Click element with retry logic
+     * Click element - uses Playwright's built-in retry and auto-wait
      */
     static async click(
         locator: Locator, 
         options: { 
             timeout?: number; 
             force?: boolean;
-            retries?: number;
         } = {}
     ): Promise<void> {
-        const { timeout = 10000, force = false, retries = 3 } = options;
-        
-        for (let i = 0; i < retries; i++) {
-            try {
-                await locator.click({ timeout, force });
-                return;
-            } catch (error) {
-                if (i === retries - 1) throw error;
-                Logger.warn(`Click failed, retrying... (${i + 1}/${retries})`);
-                await this.wait(1000);
-            }
-        }
+        const { timeout = 10000, force = false } = options;
+        await locator.click({ timeout, force });
     }
 
     /**
@@ -186,12 +175,7 @@ export class ActionHelpers {
         await source.dragTo(target);
     }
 
-    /**
-     * Wait helper
-     */
-    private static async wait(ms: number): Promise<void> {
-        await new Promise(resolve => setTimeout(resolve, ms));
-    }
+
 
     /**
      * Click and wait for navigation
@@ -221,22 +205,11 @@ export class ActionHelpers {
     }
 
     /**
-     * Get text content with retry
+     * Get text content - uses Playwright's built-in retry
      */
-    static async getText(
-        locator: Locator, 
-        retries: number = 3
-    ): Promise<string> {
-        for (let i = 0; i < retries; i++) {
-            try {
-                const text = await locator.textContent();
-                return text || '';
-            } catch (error) {
-                if (i === retries - 1) throw error;
-                await this.wait(500);
-            }
-        }
-        return '';
+    static async getText(locator: Locator): Promise<string> {
+        const text = await locator.textContent();
+        return text || '';
     }
 
     /**
