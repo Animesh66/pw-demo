@@ -1,0 +1,137 @@
+name: Run Playwright Tests
+
+on:
+  workflow_call:
+    inputs:
+      test-suite:
+        description: 'Test suite to run (order or registration)'
+        required: true
+        type: string
+      browser-matrix:
+        description: 'Browser matrix as JSON array'
+        required: false
+        type: string
+        default: '["chromium", "firefox", "webkit"]'
+
+jobs:
+  test:
+    name: ${{ inputs.test-suite }} Tests - ${{ matrix.browser }}
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ping: 1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: ${{ fromJson(inputs.browser-matrix) }}
+        
+    steps:
+    - name: Checkout test framework repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+        cache: 'npm'
+
+    - name: Clone and start demo application
+      run: |
+        git clone https://github.com/Animesh66/demo-front-end.git demo-app
+        cd demo-app
+        npm install
+        PORT=3000 MONGODB_URI=mongodb://localhost:27017/demo-app NODE_ENV=development JWT_SECRET=test-secret nohup npm start > backend.log 2>&1 &
+        echo $! > backend.pid
+        VITE_API_URL=http://localhost:3000 nohup npm run dev > frontend.log 2>&1 &
+        echo $! > frontend.pid
+
+    - name: Wait for services
+      run: |
+        echo "⏳ Waiting for Backend..."
+        for i in {1..30}; do
+          if curl -sf http://localhost:3000/api/products > /dev/null 2>&1; then
+            echo "✅ Backend ready"
+            break
+          fi
+          sleep 2
+        done
+        
+        echo "⏳ Waiting for Frontend..."
+        for i in {1..30}; do
+          if curl -sf http://localhost:5173 > /dev/null 2>&1; then
+            echo "✅ Frontend ready"
+            break
+          fi
+          sleep 2
+        done
+
+    - name: Install test dependencies
+      run: npm ci
+
+    - name: Install Playwright browsers
+      run: npx playwright install --with-deps ${{ matrix.browser }}
+
+    - name: Run ${{ inputs.test-suite }} Tests
+      run: npx playwright test --project=${{ matrix.browser }} --grep="@${{ inputs.test-suite }}"
+      env:
+        BASE_URL: http://localhost:5173
+        CI: true
+
+    - name: Upload Playwright HTML Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report-${{ inputs.test-suite }}-${{ matrix.browser }}
+        path: playwright-report/
+        retention-days: 30
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ inputs.test-suite }}-${{ matrix.browser }}
+        path: test-results/
+        retention-days: 30
+
+    - name: Upload Allure Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-results-${{ inputs.test-suite }}-${{ matrix.browser }}
+        path: allure-results/
+        retention-days: 30
+
+    - name: Upload Logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: logs-${{ inputs.test-suite }}-${{ matrix.browser }}
+        path: logs/
+        retention-days: 30
+
+    - name: Show service logs on failure
+      if: failure()
+      run: |
+        echo "📋 Backend logs:"
+        cat demo-app/backend.log || echo "No backend logs"
+        echo ""
+        echo "📋 Frontend logs:"
+        cat demo-app/frontend.log || echo "No frontend logs"
+
+    - name: Cleanup services
+      if: always()
+      run: |
+        echo "🧹 Terminating web services only (preserving all artifacts)..."
+        [ -f demo-app/backend.pid ] && kill $(cat demo-app/backend.pid) && echo "✅ Backend terminated" || echo "⚠️ Backend already stopped"
+        [ -f demo-app/frontend.pid ] && kill $(cat demo-app/frontend.pid) && echo "✅ Frontend terminated" || echo "⚠️ Frontend already stopped"
+        echo "✅ Service cleanup complete - All test artifacts preserved"

@@ -1,0 +1,129 @@
+name: Setup and Verify Services
+
+on:
+  workflow_call:
+    outputs:
+      services-ready:
+        description: "Indicates if services are ready"
+        value: ${{ jobs.setup.outputs.ready }}
+
+jobs:
+  setup:
+    name: Setup and Verify Services
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.verify.outputs.ready }}
+    
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ping: 1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '24'
+
+    - name: Clone demo application
+      run: |
+        echo "📦 Cloning demo application..."
+        git clone https://github.com/Animesh66/demo-front-end.git demo-app
+        echo "✅ Repository cloned"
+
+    - name: Install Backend dependencies
+      run: |
+        echo "📦 Installing backend dependencies..."
+        cd demo-app
+        npm install
+        echo "✅ Backend dependencies installed"
+
+    - name: Start Backend server
+      run: |
+        echo "🚀 Starting backend server..."
+        cd demo-app
+        PORT=3000 MONGODB_URI=mongodb://localhost:27017/demo-app NODE_ENV=development JWT_SECRET=test-secret nohup npm start > backend.log 2>&1 &
+        echo $! > backend.pid
+        echo "✅ Backend server started (PID: $(cat backend.pid))"
+
+    - name: Wait for Backend API
+      run: |
+        echo "⏳ Waiting for Backend API..."
+        for i in {1..40}; do
+          if curl -sf http://localhost:3000/api/products > /dev/null 2>&1; then
+            echo "✅ Backend API is responding"
+            exit 0
+          fi
+          echo "  Attempt $i/40..."
+          sleep 3
+        done
+        echo "❌ Backend API failed to respond after 120 seconds"
+        echo "Backend logs:"
+        cat demo-app/backend.log
+        exit 1
+
+    - name: Install Frontend dependencies
+      run: |
+        echo "📦 Installing frontend dependencies..."
+        cd demo-app
+        npm install
+        echo "✅ Frontend dependencies installed"
+
+    - name: Start Frontend server
+      run: |
+        echo "🚀 Starting frontend server..."
+        cd demo-app
+        VITE_API_URL=http://localhost:3000 nohup npm run dev > frontend.log 2>&1 &
+        echo $! > frontend.pid
+        echo "✅ Frontend server started (PID: $(cat frontend.pid))"
+
+    - name: Wait for Frontend
+      run: |
+        echo "⏳ Waiting for Frontend..."
+        for i in {1..40}; do
+          if curl -sf http://localhost:5173 > /dev/null 2>&1; then
+            echo "✅ Frontend is responding"
+            exit 0
+          fi
+          echo "  Attempt $i/40..."
+          sleep 3
+        done
+        echo "❌ Frontend failed to respond after 120 seconds"
+        echo "Frontend logs:"
+        cat demo-app/frontend.log
+        exit 1
+
+    - name: Verify all services
+      id: verify
+      run: |
+        echo "🔍 Final verification..."
+        curl -f http://localhost:3000/api/products || exit 1
+        curl -f http://localhost:5173 || exit 1
+        echo "✅ All services verified and healthy"
+        echo "ready=true" >> $GITHUB_OUTPUT
+
+    - name: Show service logs on failure
+      if: failure()
+      run: |
+        echo "📋 Service logs for debugging:"
+        echo ""
+        echo "=== Backend Logs ==="
+        cat demo-app/backend.log || echo "No backend logs"
+        echo ""
+        echo "=== Frontend Logs ==="
+        cat demo-app/frontend.log || echo "No frontend logs"
+
+    - name: Cleanup services
+      if: always()
+      run: |
+        echo "🧹 Terminating validation services..."
+        [ -f demo-app/backend.pid ] && kill $(cat demo-app/backend.pid) && echo "✅ Backend terminated" || echo "⚠️ Backend already stopped"
+        [ -f demo-app/frontend.pid ] && kill $(cat demo-app/frontend.pid) && echo "✅ Frontend terminated" || echo "⚠️ Frontend already stopped"
+        echo "✅ Service cleanup complete (MongoDB container automatically cleaned by GitHub Actions)"

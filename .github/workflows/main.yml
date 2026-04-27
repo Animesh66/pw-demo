@@ -1,0 +1,55 @@
+name: Playwright Tests - Main Pipeline
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+  workflow_dispatch:
+
+env:
+  BASE_URL: http://localhost:5173
+
+jobs:
+  # Step 1: Setup and verify services
+  setup-services:
+    name: Validate Services Setup
+    uses: ./.github/workflows/setup-services.yml
+
+  # Step 2: Run Order tests
+  test-order:
+    name: Run Order Tests
+    needs: [setup-services]
+    uses: ./.github/workflows/run-tests.yml
+    with:
+      test-suite: order
+      browser-matrix: '["chromium", "firefox", "webkit"]'
+
+  # Step 3: Run Registration tests
+  test-registration:
+    name: Run Registration Tests
+    needs: [setup-services]
+    uses: ./.github/workflows/run-tests.yml
+    with:
+      test-suite: registration
+      browser-matrix: '["chromium", "firefox", "webkit"]'
+
+  # Step 4: Publish test reports
+  publish-reports:
+    name: Generate Test Reports
+    needs: [test-order, test-registration]
+    uses: ./.github/workflows/publish-reports.yml
+    with:
+      report-name: Playwright Test Report
+
+  # Step 5: Cleanup and finalize
+  cleanup:
+    name: Cleanup Services
+    needs: [setup-services, test-order, test-registration, publish-reports]
+    if: always()
+    uses: ./.github/workflows/cleanup-services.yml
+    with:
+      setup-result: ${{ needs.setup-services.result }}
+      test-order-result: ${{ needs.test-order.result }}
+      test-registration-result: ${{ needs.test-registration.result }}
+      publish-reports-result: ${{ needs.publish-reports.result }}
